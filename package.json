@@ -1,0 +1,12 @@
+{
+  "name": "dogblox",
+  "version": "1.0.0",
+  "scripts": {
+    "start": "node server/server.js",
+    "build": "cd server && npm install"
+  },
+  "dependencies": {
+    "express": "^5.2.1",
+    "socket.io": "^4.8.3"
+  }
+}
