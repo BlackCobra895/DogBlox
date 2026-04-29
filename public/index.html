@@ -1,0 +1,1163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DogBlox</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: Arial, sans-serif;
+      background: url('assets/menu-bg.png') center top/cover no-repeat fixed;
+      color: white;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    #bg-canvas { display: none; }
+
+    /* Top right — guest state */
+    #top-right {
+      position: fixed;
+      top: 16px;
+      right: 20px;
+      display: flex;
+      gap: 10px;
+      z-index: 10;
+    }
+
+    .top-btn {
+      padding: 8px 20px;
+      font-size: 13px;
+      font-family: Arial Black, sans-serif;
+      border-radius: 4px;
+      cursor: pointer;
+      letter-spacing: 1px;
+      transition: filter 0.2s, transform 0.1s;
+    }
+
+    .top-btn:hover { filter: brightness(1.2); transform: scale(1.03); }
+
+    #login-btn {
+      background: transparent;
+      color: white;
+      border: 2px solid rgba(255,255,255,0.4);
+    }
+
+    #register-btn {
+      background: #44aa44;
+      color: white;
+      border: none;
+    }
+
+    /* Top right — logged in player card */
+    #player-card {
+      display: none;
+      position: fixed;
+      top: 12px;
+      right: 20px;
+      z-index: 10;
+      background: rgba(0,0,0,0.6);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 8px;
+      padding: 10px 14px;
+      min-width: 200px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    #player-card:hover { background: rgba(0,0,0,0.8); }
+
+    #player-card-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 6px;
+    }
+
+    #player-username {
+      font-family: Arial Black, sans-serif;
+      font-size: 14px;
+      letter-spacing: 1px;
+    }
+
+    #player-coins {
+      font-size: 12px;
+      color: #ffdd00;
+      font-family: Arial Black, sans-serif;
+    }
+
+    #player-rank {
+      font-size: 11px;
+      margin-bottom: 6px;
+      font-family: Arial, sans-serif;
+      opacity: 0.8;
+    }
+
+    #xp-bar-bg {
+      width: 100%;
+      height: 4px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+
+    #xp-bar-fill {
+      height: 100%;
+      background: #44aa44;
+      border-radius: 2px;
+      transition: width 0.3s;
+    }
+
+    #xp-label {
+      font-size: 10px;
+      color: #666;
+      margin-top: 3px;
+      text-align: right;
+    }
+
+    /* Left panel */
+    #left-panel {
+      position: fixed;
+      left: 20px;
+      top: 50%;
+      transform: translateY(-50%);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      z-index: 10;
+    }
+
+    .panel-btn {
+      width: 180px;
+      padding: 14px 16px;
+      background: rgba(0,0,0,0.55);
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 8px;
+      color: white;
+      font-family: Arial, sans-serif;
+      font-size: 14px;
+      cursor: pointer;
+      transition: background 0.2s, border-color 0.2s, transform 0.1s;
+      text-align: left;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .panel-btn:hover {
+      background: rgba(0,0,0,0.75);
+      border-color: rgba(255,255,255,0.35);
+      transform: translateX(4px);
+    }
+
+    .panel-icon { font-size: 20px; }
+    .panel-label { display: flex; flex-direction: column; gap: 2px; }
+
+    .panel-title {
+      font-family: Arial Black, sans-serif;
+      font-size: 13px;
+      color: white;
+    }
+
+    .panel-sub { font-size: 11px; color: #888; }
+
+    /* Center */
+    #center {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      z-index: 10;
+      margin-top: 80px;
+    }
+
+    #tagline {
+      font-family: Arial, sans-serif;
+      color: white;
+      font-size: 13px;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      text-shadow: 2px 2px 0 #000;
+      margin-bottom: 8px;
+    }
+
+    #play-btn {
+      width: 260px;
+      padding: 18px;
+      font-size: 20px;
+      font-family: Arial Black, sans-serif;
+      background: #44aa44;
+      color: white;
+      border: none;
+      cursor: pointer;
+      border-radius: 6px;
+      letter-spacing: 1px;
+      transition: transform 0.1s, filter 0.2s;
+      text-shadow: 1px 1px 0 #000;
+    }
+
+    #play-btn:hover { transform: scale(1.05); filter: brightness(1.15); }
+    #play-btn:active { transform: scale(0.98); }
+
+    #version {
+      position: fixed;
+      bottom: 16px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 11px;
+      color: rgba(255,255,255,0.3);
+      letter-spacing: 2px;
+      z-index: 1;
+      text-shadow: 1px 1px 0 #000;
+    }
+
+    /* Modal */
+    #modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.7);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #modal-overlay.active { display: flex; }
+
+    #modal {
+      background: #1a1a2e;
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 12px;
+      padding: 40px;
+      width: 520px;
+      max-height: 80vh;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    #modal h2 {
+      font-family: Arial Black, sans-serif;
+      font-size: 22px;
+      color: white;
+      margin-bottom: 4px;
+    }
+
+    #modal input {
+      width: 100%;
+      padding: 12px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 6px;
+      color: white;
+      font-size: 15px;
+      outline: none;
+    }
+
+    #modal input:focus { border-color: #44aa44; }
+
+    .modal-submit-btn {
+      background: #44aa44;
+      color: white;
+      border: none;
+      padding: 13px;
+      font-size: 16px;
+      font-family: Arial Black, sans-serif;
+      border-radius: 6px;
+      cursor: pointer;
+      margin-top: 4px;
+      width: 100%;
+    }
+
+    .modal-submit-btn:hover { background: #55bb55; }
+
+    #modal-close {
+      background: transparent;
+      color: #666;
+      border: none;
+      font-size: 13px;
+      cursor: pointer;
+      text-align: center;
+    }
+
+    #modal-close:hover { color: #aaa; }
+
+    #modal-error {
+      color: #ff6666;
+      font-size: 13px;
+      display: none;
+    }
+
+    #skin-drop {
+      border: 2px dashed rgba(255,255,255,0.2);
+      border-radius: 8px;
+      padding: 24px;
+      text-align: center;
+      color: #888;
+      font-size: 13px;
+      cursor: pointer;
+      transition: border-color 0.2s;
+    }
+
+    #skin-drop:hover { border-color: #44aa44; color: white; }
+
+    #skin-preview {
+      display: none;
+      width: 64px;
+      height: 64px;
+      image-rendering: pixelated;
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 4px;
+      margin: 0 auto;
+    }
+
+    .ranks-section-title {
+      font-family: Arial Black, sans-serif;
+      font-size: 13px;
+      color: #888;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      margin: 12px 0 8px 0;
+      padding-bottom: 6px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .rank-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 12px;
+      background: rgba(255,255,255,0.04);
+      border-radius: 6px;
+      margin-bottom: 6px;
+      border: 1px solid rgba(255,255,255,0.06);
+    }
+
+    .rank-row:hover { background: rgba(255,255,255,0.08); }
+
+    .rank-name {
+      font-family: Arial Black, sans-serif;
+      font-size: 14px;
+    }
+
+    .rank-info { font-size: 12px; color: #888; }
+
+    .rank-badge {
+      font-size: 11px;
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-family: Arial Black, sans-serif;
+      letter-spacing: 1px;
+    }
+
+    @keyframes rainbow {
+      0%   { color: #ff0000; }
+      15%  { color: #ff8800; }
+      30%  { color: #ffff00; }
+      45%  { color: #00ff00; }
+      60%  { color: #00aaff; }
+      75%  { color: #8800ff; }
+      90%  { color: #ff00aa; }
+      100% { color: #ff0000; }
+    }
+
+    .rainbow { animation: rainbow 2s linear infinite; }
+
+    /* Profile fullscreen overlay */
+    #profile-overlay {
+      display: none;
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: #0d0d1a;
+      z-index: 200;
+      animation: fadeIn 0.2s ease;
+    }
+
+    #profile-overlay.active { display: flex; }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    #profile-close {
+      position: absolute;
+      top: 20px;
+      right: 24px;
+      background: transparent;
+      border: 1px solid rgba(255,255,255,0.2);
+      color: white;
+      font-size: 13px;
+      padding: 8px 16px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-family: Arial Black, sans-serif;
+      z-index: 10;
+    }
+
+    #profile-close:hover { background: rgba(255,255,255,0.1); }
+
+    #profile-inner {
+      display: flex;
+      width: 100%;
+      height: 100%;
+    }
+
+    /* Left tabs */
+    #profile-tabs {
+      width: 200px;
+      background: rgba(0,0,0,0.4);
+      border-right: 1px solid rgba(255,255,255,0.08);
+      display: flex;
+      flex-direction: column;
+      padding: 80px 0 20px 0;
+      gap: 4px;
+    }
+
+    .profile-tab {
+      padding: 14px 20px;
+      font-family: Arial Black, sans-serif;
+      font-size: 13px;
+      color: #888;
+      cursor: pointer;
+      border-left: 3px solid transparent;
+      transition: all 0.15s;
+      letter-spacing: 1px;
+    }
+
+    .profile-tab:hover { color: white; background: rgba(255,255,255,0.05); }
+
+    .profile-tab.active {
+      color: white;
+      border-left-color: #44aa44;
+      background: rgba(255,255,255,0.07);
+    }
+
+    /* Right content */
+    #profile-content {
+      flex: 1;
+      padding: 60px 48px;
+      overflow-y: auto;
+    }
+
+    .profile-section { display: none; }
+    .profile-section.active { display: block; }
+
+    #profile-content h3 {
+      font-family: Arial Black, sans-serif;
+      font-size: 20px;
+      margin-bottom: 6px;
+      color: white;
+    }
+
+    #profile-content p {
+      color: #666;
+      font-size: 13px;
+      margin-bottom: 24px;
+    }
+
+    .profile-field {
+      margin-bottom: 16px;
+    }
+
+    .profile-field label {
+      display: block;
+      font-size: 12px;
+      color: #888;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+
+    .profile-field-row {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .profile-field input {
+      flex: 1;
+      padding: 11px 14px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 6px;
+      color: white;
+      font-size: 14px;
+      outline: none;
+    }
+
+    .profile-field input:focus { border-color: #44aa44; }
+
+    .save-btn {
+      padding: 11px 20px;
+      background: #44aa44;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-family: Arial Black, sans-serif;
+      font-size: 13px;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .save-btn:hover { background: #55bb55; }
+
+    /* Item grid */
+    .items-category-title {
+      font-family: Arial Black, sans-serif;
+      font-size: 13px;
+      color: #888;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      margin: 20px 0 10px 0;
+      padding-bottom: 6px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .items-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    .item-slot {
+      aspect-ratio: 1;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 8px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.15s;
+      font-size: 28px;
+      position: relative;
+    }
+
+    .item-slot:hover {
+      background: rgba(255,255,255,0.1);
+      border-color: rgba(255,255,255,0.3);
+    }
+
+    .item-slot.equipped {
+      border-color: #44aa44;
+      background: rgba(68,170,68,0.1);
+    }
+
+    .item-slot .item-label {
+      font-size: 9px;
+      color: #888;
+      margin-top: 4px;
+      text-align: center;
+    }
+
+    .item-slot.locked {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    .equipped-badge {
+      position: absolute;
+      top: 4px;
+      right: 4px;
+      width: 8px;
+      height: 8px;
+      background: #44aa44;
+      border-radius: 50%;
+    }
+
+    /* Profile 3D canvas */
+    #profile-3d-canvas {
+      width: 180px;
+      height: 300px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 10px;
+      float: right;
+      margin-left: 24px;
+    }
+
+    #website-link {
+  position: fixed;
+  bottom: 16px;
+  right: 20px;
+  z-index: 10;
+  animation: bounce 2s ease-in-out infinite;
+}
+
+#website-link a {
+  color: white;
+  font-size: 14px;
+  font-family: Arial Black, sans-serif;
+  letter-spacing: 1px;
+  text-decoration: none;
+  background: rgba(0,0,0,0.5);
+  border: 1px solid rgba(255,255,255,0.2);
+  padding: 8px 16px;
+  border-radius: 20px;
+  transition: background 0.2s, border-color 0.2s;
+}
+
+#website-link a:hover {
+  background: rgba(68,170,68,0.3);
+  border-color: #44aa44;
+}
+
+@keyframes bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+  </style>
+</head>
+<body>
+
+  <canvas id="bg-canvas"></canvas>
+
+  <!-- Guest buttons -->
+  <div id="top-right">
+    <button class="top-btn" id="login-btn" onclick="openModal('login')">LOGIN</button>
+    <button class="top-btn" id="register-btn" onclick="openModal('register')">SIGN UP</button>
+  </div>
+
+  <!-- Logged in player card -->
+  <div id="player-card" onclick="openProfile()">
+    <div id="player-card-top">
+      <span id="player-username">PlayerName</span>
+      <span id="player-coins">🪙 0</span>
+    </div>
+    <div id="player-rank">Pup</div>
+    <div id="xp-bar-bg">
+      <div id="xp-bar-fill" style="width:0%"></div>
+    </div>
+    <div id="xp-label">0 / 500 XP</div>
+  </div>
+
+  <!-- Left panel -->
+  <div id="left-panel">
+    <button class="panel-btn" onclick="openModal('skin')">
+      <span class="panel-icon">🎨</span>
+      <div class="panel-label">
+        <div class="panel-title">Skin Uploader</div>
+        <div class="panel-sub">Customize your look</div>
+      </div>
+    </button>
+    <button class="panel-btn" onclick="openModal('ranks')">
+      <span class="panel-icon">🏆</span>
+      <div class="panel-label">
+        <div class="panel-title">Ranks</div>
+        <div class="panel-sub">View all ranks</div>
+      </div>
+    </button>
+  </div>
+
+  <!-- Center -->
+  <div id="center">
+    <div id="tagline">A Dog Packs Adventure</div>
+    <button id="play-btn" onclick="goToLobby()">PLAY</button>
+  </div>
+
+  <div id="version">v0.1.0 — ALPHA</div>
+
+  <!-- Modal -->
+  <div id="modal-overlay">
+    <div id="modal">
+      <h2 id="modal-title">Login</h2>
+
+      <div id="auth-area" style="display:flex; flex-direction:column; gap:12px;">
+        <input type="text" id="input-username" placeholder="Username" />
+        <input type="password" id="input-password" placeholder="Password" />
+        <div id="modal-error">Please fill in all fields.</div>
+        <button class="modal-submit-btn" onclick="submitModal()">CONFIRM</button>
+      </div>
+
+      <div id="skin-upload-area" style="display:none; flex-direction:column; gap:12px;">
+        <p style="color:#aaa; font-size:13px;">Upload a PNG skin texture to use in game.</p>
+        <div id="skin-drop" onclick="document.getElementById('skin-file').click()">
+          Click to upload a skin PNG
+        </div>
+        <input type="file" id="skin-file" accept=".png" style="display:none" onchange="handleSkinUpload(event)" />
+        <img id="skin-preview" />
+        <button class="modal-submit-btn" onclick="closeModal()">DONE</button>
+      </div>
+
+      <div id="ranks-area" style="display:none;">
+        <div class="ranks-section-title">Level Up Ranks</div>
+        <p style="color:#666; font-size:12px; margin-bottom:10px;">Earned automatically as you gain XP.</p>
+        <div class="rank-row"><span class="rank-name" style="color:#8B4513;">Pup</span><span class="rank-info">Level 0 — Starting rank</span></div>
+        <div class="rank-row"><span class="rank-name" style="color:#aaaaaa;">Learner</span><span class="rank-info">Level 5</span></div>
+        <div class="rank-row"><span class="rank-name" style="color:#ffffff;">Full Dog</span><span class="rank-info">Level 10</span></div>
+        <div class="rank-row"><span class="rank-name" style="color:#44aa44;">Hunter</span><span class="rank-info">Level 20</span></div>
+        <div class="rank-row"><span class="rank-name" style="color:#ff4444;">Fighter</span><span class="rank-info">Level 35</span></div>
+        <div class="rank-row"><span class="rank-name" style="color:#ffdd00;">Alpha</span><span class="rank-info">Level 50</span></div>
+        <div class="rank-row"><span class="rank-name" style="color:#FFD700;">Top Dog</span><span class="rank-info">Level 75</span></div>
+        <div class="rank-row"><span class="rank-name rainbow">Legend</span><span class="rank-info">Level 100 — Max rank</span></div>
+
+        <div class="ranks-section-title" style="margin-top:16px;">Fun Ranks</div>
+        <p style="color:#666; font-size:12px; margin-bottom:10px;">Buy with coins earned from minigames.</p>
+        <div class="rank-row"><span class="rank-name" style="color:#fff; text-shadow:0 0 6px #000;">Fluffy</span><span class="rank-info">600 coins</span></div>
+        <div class="rank-row"><span class="rank-name" style="color:#ff69b4;">Cutie</span><span class="rank-info">600 coins</span></div>
+        <div class="rank-row"><span class="rank-name" style="color:#ff4400;">Flamethrower</span><span class="rank-info">600 coins</span></div>
+        <div class="rank-row"><span class="rank-name" style="background:linear-gradient(90deg,#00ff88,#0088ff);-webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; color: transparent;">Joker</span><span class="rank-info">600 coins</span></div>
+        <div class="rank-row"><span class="rank-name" style="color:#ff2255;">Lover</span><span class="rank-info">600 coins</span></div>
+
+        <div class="ranks-section-title" style="margin-top:16px;">Paid Ranks</div>
+        <p style="color:#666; font-size:12px; margin-bottom:10px;">Support the game and get exclusive perks.</p>
+        <div class="rank-row"><span class="rank-name" style="color:#aa44ff;">Plus</span><span class="rank-badge" style="background:rgba(170,68,255,0.15);color:#aa44ff;border:1px solid rgba(170,68,255,0.3);">PAID</span></div>
+        <div class="rank-row"><span class="rank-name" style="color:#44ff44;">Pro</span><span class="rank-badge" style="background:rgba(68,255,68,0.15);color:#44ff44;border:1px solid rgba(68,255,68,0.3);">PAID</span></div>
+        <div class="rank-row"><span class="rank-name" style="color:#44aaff;">Elite</span><span class="rank-badge" style="background:rgba(68,170,255,0.15);color:#44aaff;border:1px solid rgba(68,170,255,0.3);">PAID</span></div>
+        <div class="rank-row"><span class="rank-name rainbow">Custom</span><span class="rank-badge" style="background:rgba(255,255,255,0.05);color:#aaa;border:1px solid rgba(255,255,255,0.15);">PAID</span></div>
+        <button class="modal-submit-btn" onclick="closeModal()" style="margin-top:16px;">CLOSE</button>
+      </div>
+
+      <button id="modal-close" onclick="closeModal()">Cancel</button>
+    </div>
+  </div>
+
+  <!-- Profile fullscreen -->
+  <div id="profile-overlay">
+    <button id="profile-close" onclick="closeProfile()">✕ Close</button>
+    <div id="profile-inner">
+
+      <div id="profile-tabs">
+        <div class="profile-tab active" onclick="switchTab('account')">👤 Account</div>
+        <div class="profile-tab" onclick="switchTab('items')">🎒 Equippable</div>
+        <div class="profile-tab" onclick="switchTab('texture')">🖼️ Skin Texture</div>
+        <div class="profile-tab" onclick="switchTab('skins')">🐶 Custom Skins</div>
+      </div>
+
+      <div id="profile-content">
+
+        <!-- Account tab -->
+        <div id="tab-account" class="profile-section active">
+          <h3>Your Account</h3>
+          <p>Update your username or password.</p>
+
+          <div class="profile-field">
+            <label>Username</label>
+            <div class="profile-field-row">
+              <input type="text" id="profile-username-input" placeholder="Username" />
+              <button class="save-btn" onclick="saveUsername()">Save</button>
+            </div>
+          </div>
+
+          <div class="profile-field">
+            <label>Password</label>
+            <div class="profile-field-row">
+              <input type="password" id="profile-password-input" placeholder="New password" />
+              <button class="save-btn" onclick="savePassword()">Save</button>
+            </div>
+          </div>
+
+          <p id="account-save-msg" style="color:#44aa44; display:none; margin-top:8px;">Saved!</p>
+          <button class="save-btn" style="background:transparent; color:#ff6666; border:2px solid rgba(255,100,100,0.3); margin-top:24px;" onclick="signOut()">Sign Out</button>
+        </div>
+
+        <!-- Equippable items tab -->
+        <div id="tab-items" class="profile-section">
+          <h3>Equippable Items</h3>
+          <p>Click an item to equip it. It will show on your character in game.</p>
+
+          <canvas id="profile-3d-canvas"></canvas>
+
+          <div class="items-category-title">Hats</div>
+          <div class="items-grid">
+            <div class="item-slot equipped" onclick="equipItem(this, 'hat', 'Cap')">
+              🧢<div class="item-label">Cap</div><div class="equipped-badge"></div>
+            </div>
+            <div class="item-slot" onclick="equipItem(this, 'hat', 'Crown')">
+              👑<div class="item-label">Crown</div>
+            </div>
+            <div class="item-slot locked">
+              🎩<div class="item-label">Top Hat</div>
+            </div>
+            <div class="item-slot locked">
+              ⛑️<div class="item-label">Helmet</div>
+            </div>
+          </div>
+
+          <div class="items-category-title">Wings</div>
+          <div class="items-grid">
+            <div class="item-slot" onclick="equipItem(this, 'wings', 'Angel')">
+              🪽<div class="item-label">Angel</div>
+            </div>
+            <div class="item-slot locked">
+              🦋<div class="item-label">Butterfly</div>
+            </div>
+            <div class="item-slot locked">
+              🔥<div class="item-label">Fire</div>
+            </div>
+          </div>
+
+          <div class="items-category-title">Tails</div>
+          <div class="items-grid">
+            <div class="item-slot" onclick="equipItem(this, 'tail', 'Fluffy')">
+              🐾<div class="item-label">Fluffy</div>
+            </div>
+            <div class="item-slot locked">
+              ⚡<div class="item-label">Lightning</div>
+            </div>
+          </div>
+
+          <div class="items-category-title">Accessories</div>
+          <div class="items-grid">
+            <div class="item-slot" onclick="equipItem(this, 'acc', 'Scarf')">
+              🧣<div class="item-label">Scarf</div>
+            </div>
+            <div class="item-slot" onclick="equipItem(this, 'acc', 'Glasses')">
+              🕶️<div class="item-label">Glasses</div>
+            </div>
+            <div class="item-slot locked">
+              💎<div class="item-label">Diamond</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Skin texture tab -->
+        <div id="tab-texture" class="profile-section">
+          <h3>Skin Texture</h3>
+          <p>Your custom uploaded skin texture.</p>
+          <div id="texture-has-skin" style="display:none;">
+            <img id="texture-preview-large" style="width:128px; height:128px; image-rendering:pixelated; border:1px solid rgba(255,255,255,0.2); border-radius:8px; display:block; margin-bottom:16px;" />
+            <button class="save-btn" onclick="document.getElementById('skin-file2').click()">Change Skin</button>
+            <input type="file" id="skin-file2" accept=".png" style="display:none" onchange="handleSkinUpload2(event)" />
+          </div>
+          <div id="texture-no-skin">
+            <div style="background:rgba(255,255,255,0.04); border:1px dashed rgba(255,255,255,0.15); border-radius:10px; padding:32px; text-align:center; margin-bottom:16px;">
+              <div style="font-size:40px; margin-bottom:12px;">🖼️</div>
+              <p style="color:#888; font-size:13px; line-height:1.7; margin:0;">No skin uploaded yet.<br>Go to the <strong style="color:white;">Skin Uploader</strong> on the home screen<br>or click below to upload one now.</p>
+            </div>
+            <button class="save-btn" onclick="document.getElementById('skin-file2').click()">Upload Skin PNG</button>
+            <input type="file" id="skin-file2" accept=".png" style="display:none" onchange="handleSkinUpload2(event)" />
+          </div>
+        </div>
+
+        <!-- Custom skins tab -->
+        <div id="tab-skins" class="profile-section">
+          <h3>Custom Skins</h3>
+          <p>Skins designed exclusively for DogBlox.</p>
+          <div style="background:rgba(255,255,255,0.04); border:1px dashed rgba(255,255,255,0.15); border-radius:10px; padding:48px; text-align:center;">
+            <div style="font-size:48px; margin-bottom:16px;">🐶</div>
+            <p style="color:#888; font-size:14px; margin:0;">Custom skins coming soon!</p>
+            <p style="color:#555; font-size:12px; margin-top:8px;">The creator is working on exclusive DogBlox skins.</p>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <div id="website-link">
+  <a href="https://www.harmonytaylor.ca" target="_blank">Home | Dog Packs</a>
+</div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script>
+    // Rank system data
+    const rankData = [
+      { name: 'Pup',      color: '#8B4513', minLevel: 0  },
+      { name: 'Learner',  color: '#aaaaaa', minLevel: 5  },
+      { name: 'Full Dog', color: '#ffffff', minLevel: 10 },
+      { name: 'Hunter',   color: '#44aa44', minLevel: 20 },
+      { name: 'Fighter',  color: '#ff4444', minLevel: 35 },
+      { name: 'Alpha',    color: '#ffdd00', minLevel: 50 },
+      { name: 'Top Dog',  color: '#FFD700', minLevel: 75 },
+      { name: 'Legend',   color: 'rainbow', minLevel: 100}
+    ];
+
+    function getRank(level) {
+      let current = rankData[0];
+      for (const r of rankData) {
+        if (level >= r.minLevel) current = r;
+      }
+      return current;
+    }
+
+    function getNextRankXP(level) {
+      for (let i = 0; i < rankData.length; i++) {
+        if (level < rankData[i].minLevel) return rankData[i].minLevel;
+      }
+      return 100;
+    }
+
+    // Load player data
+    let playerData = JSON.parse(localStorage.getItem('dogblox_playerdata') || 'null') || {
+      username: null,
+      password: null,
+      level: 0,
+      xp: 0,
+      coins: 0,
+      equipped: {}
+    };
+
+    function savePlayerData() {
+      localStorage.setItem('dogblox_playerdata', JSON.stringify(playerData));
+    }
+
+    function updatePlayerCard() {
+      if (!playerData.username) return;
+
+      document.getElementById('top-right').style.display = 'none';
+      document.getElementById('player-card').style.display = 'block';
+
+      const rank = getRank(playerData.level);
+      const nextXP = getNextRankXP(playerData.level);
+      const pct = Math.min(100, (playerData.xp / (nextXP * 100)) * 100);
+
+      document.getElementById('player-username').textContent = playerData.username;
+      document.getElementById('player-username').style.color =
+        rank.color === 'rainbow' ? '' : rank.color;
+      if (rank.color === 'rainbow') {
+        document.getElementById('player-username').classList.add('rainbow');
+      }
+
+      document.getElementById('player-rank').textContent = rank.name;
+      document.getElementById('player-rank').style.color =
+        rank.color === 'rainbow' ? '' : rank.color;
+      if (rank.color === 'rainbow') {
+        document.getElementById('player-rank').classList.add('rainbow');
+      }
+
+      document.getElementById('player-coins').textContent = '🪙 ' + playerData.coins;
+      document.getElementById('xp-bar-fill').style.width = pct + '%';
+      document.getElementById('xp-label').textContent =
+        playerData.xp + ' / ' + (nextXP * 100) + ' XP';
+    }
+
+    // Init on load
+    if (playerData.username) updatePlayerCard();
+
+    function goToLobby() { window.location.href = 'lobby.html'; }
+
+    let currentMode = 'login';
+
+    function openModal(mode) {
+      currentMode = mode;
+      document.getElementById('auth-area').style.display = 'none';
+      document.getElementById('skin-upload-area').style.display = 'none';
+      document.getElementById('ranks-area').style.display = 'none';
+      document.getElementById('modal-error').style.display = 'none';
+
+      if (mode === 'login' || mode === 'register') {
+        document.getElementById('modal-title').textContent =
+          mode === 'login' ? 'Login' : 'Create Account';
+        document.getElementById('auth-area').style.display = 'flex';
+      } else if (mode === 'skin') {
+        document.getElementById('modal-title').textContent = 'Skin Uploader';
+        document.getElementById('skin-upload-area').style.display = 'flex';
+      } else if (mode === 'ranks') {
+        document.getElementById('modal-title').textContent = 'All Ranks';
+        document.getElementById('ranks-area').style.display = 'block';
+      }
+
+      document.getElementById('modal-overlay').classList.add('active');
+    }
+
+    function closeModal() {
+      document.getElementById('modal-overlay').classList.remove('active');
+    }
+
+    function submitModal() {
+      const username = document.getElementById('input-username').value.trim();
+      const password = document.getElementById('input-password').value.trim();
+      if (!username || !password) {
+        document.getElementById('modal-error').style.display = 'block';
+        return;
+      }
+      playerData.username = username;
+      playerData.password = password;
+      savePlayerData();
+      closeModal();
+      updatePlayerCard();
+    }
+
+    function signOut() {
+      localStorage.removeItem('dogblox_username');
+      localStorage.removeItem('dogblox_playerdata');
+      window.location.reload();
+    }
+
+    function handleSkinUpload(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        document.getElementById('skin-preview').src = e.target.result;
+        document.getElementById('skin-preview').style.display = 'block';
+        document.getElementById('skin-drop').textContent = file.name + ' ✓';
+        localStorage.setItem('dogblox_skin', e.target.result);
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function handleSkinUpload2(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        localStorage.setItem('dogblox_skin', e.target.result);
+        loadTextureTab();
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function loadTextureTab() {
+      const skin = localStorage.getItem('dogblox_skin');
+      if (skin) {
+        document.getElementById('texture-has-skin').style.display = 'block';
+        document.getElementById('texture-no-skin').style.display = 'none';
+        document.getElementById('texture-preview-large').src = skin;
+      } else {
+        document.getElementById('texture-has-skin').style.display = 'none';
+        document.getElementById('texture-no-skin').style.display = 'block';
+      }
+    }
+
+    // Profile page
+    function openProfile() {
+      document.getElementById('profile-overlay').style.display = 'flex';
+      document.getElementById('profile-username-input').value = playerData.username || '';
+      loadTextureTab();
+      init3DPreview();
+    }
+
+    function closeProfile() {
+      document.getElementById('profile-overlay').style.display = 'none';
+    }
+
+    function switchTab(tab) {
+      document.querySelectorAll('.profile-tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.profile-section').forEach(s => s.classList.remove('active'));
+      event.target.classList.add('active');
+      document.getElementById('tab-' + tab).classList.add('active');
+    }
+
+    function saveUsername() {
+      const val = document.getElementById('profile-username-input').value.trim();
+      if (!val) return;
+      playerData.username = val;
+      savePlayerData();
+      updatePlayerCard();
+      showSaveMsg();
+    }
+
+    function savePassword() {
+      const val = document.getElementById('profile-password-input').value.trim();
+      if (!val) return;
+      playerData.password = val;
+      savePlayerData();
+      showSaveMsg();
+    }
+
+    function showSaveMsg() {
+      const msg = document.getElementById('account-save-msg');
+      msg.style.display = 'block';
+      setTimeout(() => msg.style.display = 'none', 2000);
+    }
+
+    function equipItem(el, category, name) {
+      if (el.classList.contains('locked')) return;
+      document.querySelectorAll(`.item-slot:not(.locked)`).forEach(s => {
+        if (s.dataset.category === category) {
+          s.classList.remove('equipped');
+          s.querySelector('.equipped-badge') && s.querySelector('.equipped-badge').remove();
+        }
+      });
+      el.dataset.category = category;
+      el.classList.add('equipped');
+      if (!el.querySelector('.equipped-badge')) {
+        const badge = document.createElement('div');
+        badge.className = 'equipped-badge';
+        el.appendChild(badge);
+      }
+      playerData.equipped[category] = name;
+      savePlayerData();
+    }
+
+    // 3D player preview
+    let previewRenderer, previewScene, previewCamera, previewPlayer;
+
+    function init3DPreview() {
+      const canvas = document.getElementById('profile-3d-canvas');
+      if (previewRenderer) {
+        previewRenderer.render(previewScene, previewCamera);
+        return;
+      }
+
+      previewScene = new THREE.Scene();
+      previewScene.background = new THREE.Color(0x111122);
+
+      previewCamera = new THREE.PerspectiveCamera(45, 180 / 300, 0.1, 100);
+      previewCamera.position.set(0, 1.5, 4);
+      previewCamera.lookAt(0, 1, 0);
+
+      previewRenderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+      previewRenderer.setSize(180, 300);
+
+      // Simple block player
+      const bodyGeo = new THREE.BoxGeometry(0.8, 1.2, 0.4);
+      const bodyMat = new THREE.MeshLambertMaterial({ color: 0xff8800 });
+      const body = new THREE.Mesh(bodyGeo, bodyMat);
+      body.position.y = 0.6;
+      previewScene.add(body);
+
+      const headGeo = new THREE.BoxGeometry(0.7, 0.7, 0.7);
+      const headMat = new THREE.MeshLambertMaterial({ color: 0xffaa44 });
+      const head = new THREE.Mesh(headGeo, headMat);
+      head.position.y = 1.55;
+      previewScene.add(head);
+
+      const legGeo = new THREE.BoxGeometry(0.35, 0.8, 0.35);
+      const legMat = new THREE.MeshLambertMaterial({ color: 0x884400 });
+      const legL = new THREE.Mesh(legGeo, legMat);
+      legL.position.set(-0.22, -0.4, 0);
+      previewScene.add(legL);
+      const legR = new THREE.Mesh(legGeo, legMat);
+      legR.position.set(0.22, -0.4, 0);
+      previewScene.add(legR);
+
+      const armGeo = new THREE.BoxGeometry(0.3, 0.9, 0.3);
+      const armMat = new THREE.MeshLambertMaterial({ color: 0xff8800 });
+      const armL = new THREE.Mesh(armGeo, armMat);
+      armL.position.set(-0.6, 0.6, 0);
+      previewScene.add(armL);
+      const armR = new THREE.Mesh(armGeo, armMat);
+      armR.position.set(0.6, 0.6, 0);
+      previewScene.add(armR);
+
+      const light = new THREE.DirectionalLight(0xffffff, 1);
+      light.position.set(2, 4, 3);
+      previewScene.add(light);
+      previewScene.add(new THREE.AmbientLight(0xffffff, 0.4));
+
+      previewPlayer = new THREE.Group();
+      previewPlayer.add(body, head, legL, legR, armL, armR);
+      previewScene.add(previewPlayer);
+
+      let angle = 0;
+      function animatePreview() {
+        requestAnimationFrame(animatePreview);
+        angle += 0.01;
+        previewPlayer.rotation.y = angle;
+        previewRenderer.render(previewScene, previewCamera);
+      }
+      animatePreview();
+    }
+
+    document.getElementById('modal-overlay').addEventListener('click', function(e) {
+      if (e.target === this) closeModal();
+    });
+  </script>
+
+</body>
+</html>
