@@ -1,9 +1,10 @@
 {
   "build": {
-    "builder": "NIXPACKS"
+    "builder": "NIXPACKS",
+    "buildCommand": "cd server && npm install"
   },
   "deploy": {
-    "startCommand": "cd server && npm install && node server.js",
+    "startCommand": "node server/server.js",
     "restartPolicyType": "ON_FAILURE"
   }
 }
