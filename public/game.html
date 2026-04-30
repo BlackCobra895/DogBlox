@@ -708,7 +708,7 @@ function buildHotbar() {
     slot.addEventListener('click', () => selectSlot(i));
 
     // Draw after a short delay to let textures load
-    setTimeout(() => drawCubePreview(cvs, def), 100);
+    setTimeout(() => drawCubePreview(cvs, def), 500 + i * 50);
   });
 }
 
@@ -755,7 +755,7 @@ function buildInventory() {
     slot.appendChild(label);
     cat.appendChild(slot);
 
-    setTimeout(() => drawCubePreview(cvs, def), 150);
+    setTimeout(() => drawCubePreview(cvs, def), 800);
 
     slot.addEventListener('click', () => {
       selectedBlock = def.id;
