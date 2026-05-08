@@ -2,6 +2,9 @@
 <html>
 <head>
   <title>DogBlox</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/utils/BufferGeometryUtils.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
   <style>
     body { margin: 0; overflow: hidden; }
 
@@ -12,7 +15,7 @@
       transform: translateX(-50%);
       display: flex;
       gap: 6px;
-      background: rgba(10, 10, 20, 0.85);
+      background: rgba(10,10,20,0.85);
       padding: 8px 10px;
       border-radius: 40px;
       border: 1px solid rgba(255,255,255,0.1);
@@ -21,8 +24,7 @@
     }
 
     .slot {
-      width: 52px;
-      height: 52px;
+      width: 52px; height: 52px;
       background: rgba(255,255,255,0.05);
       border: 2px solid rgba(255,255,255,0.15);
       border-radius: 12px;
@@ -35,10 +37,7 @@
       transition: transform 0.1s, border-color 0.15s, background 0.15s;
     }
 
-    .slot:hover {
-      background: rgba(255,255,255,0.12);
-      transform: translateY(-3px);
-    }
+    .slot:hover { background: rgba(255,255,255,0.12); transform: translateY(-3px); }
 
     .slot.active {
       border-color: #44aa44;
@@ -47,23 +46,8 @@
       box-shadow: 0 0 12px rgba(68,170,68,0.4);
     }
 
-    .slot-icon {
-      width: 36px;
-      height: 36px;
-      image-rendering: pixelated;
-      border-radius: 4px;
-      object-fit: cover;
-    }
-
-    .slot-number {
-      position: absolute;
-      top: 3px;
-      left: 5px;
-      font-size: 9px;
-      color: rgba(255,255,255,0.5);
-      font-family: Arial, sans-serif;
-      font-weight: bold;
-    }
+    .slot-icon { width: 36px; height: 36px; image-rendering: pixelated; border-radius: 4px; object-fit: cover; }
+    .slot-number { position: absolute; top: 3px; left: 5px; font-size: 9px; color: rgba(255,255,255,0.5); font-family: Arial, sans-serif; font-weight: bold; }
 
     .slot-tooltip {
       position: absolute;
@@ -116,20 +100,8 @@
       to   { transform: translateY(0);    opacity: 1; }
     }
 
-    #inventory-panel h2 {
-      font-family: Arial Black, sans-serif;
-      font-size: 18px;
-      color: white;
-      margin-bottom: 4px;
-      letter-spacing: 2px;
-    }
-
-    #inventory-panel > p {
-      color: #555;
-      font-size: 12px;
-      margin-bottom: 20px;
-      font-family: Arial, sans-serif;
-    }
+    #inventory-panel h2 { font-family: Arial Black, sans-serif; font-size: 18px; color: white; margin-bottom: 4px; letter-spacing: 2px; }
+    #inventory-panel > p { color: #555; font-size: 12px; margin-bottom: 20px; font-family: Arial, sans-serif; }
 
     .inv-category {
       font-family: Arial Black, sans-serif;
@@ -142,12 +114,7 @@
       border-bottom: 1px solid rgba(255,255,255,0.06);
     }
 
-    .inv-grid {
-      display: grid;
-      grid-template-columns: repeat(6, 1fr);
-      gap: 8px;
-      margin-bottom: 8px;
-    }
+    .inv-grid { display: grid; grid-template-columns: repeat(6,1fr); gap: 8px; margin-bottom: 8px; }
 
     .inv-slot {
       aspect-ratio: 1;
@@ -164,190 +131,70 @@
       gap: 4px;
     }
 
-    .inv-slot:hover {
-      background: rgba(255,255,255,0.1);
-      border-color: rgba(255,255,255,0.25);
-      transform: scale(1.05);
-    }
-
-    .inv-slot.selected {
-      border-color: #44aa44;
-      background: rgba(68,170,68,0.12);
-      box-shadow: 0 0 8px rgba(68,170,68,0.3);
-    }
-
-    .inv-icon {
-      width: 40px;
-      height: 40px;
-      image-rendering: pixelated;
-      object-fit: cover;
-      border-radius: 4px;
-    }
-
-    .inv-slot-name {
-      font-size: 9px;
-      color: #888;
-      font-family: Arial, sans-serif;
-      text-align: center;
-      white-space: nowrap;
-    }
+    .inv-slot:hover { background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.25); transform: scale(1.05); }
+    .inv-slot.selected { border-color: #44aa44; background: rgba(68,170,68,0.12); box-shadow: 0 0 8px rgba(68,170,68,0.3); }
+    .inv-icon { width: 40px; height: 40px; image-rendering: pixelated; object-fit: cover; border-radius: 4px; }
+    .inv-slot-name { font-size: 9px; color: #888; font-family: Arial, sans-serif; text-align: center; white-space: nowrap; }
 
     #pausemenu {
-      position: fixed;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
-      background: rgba(0,0,0,0.6);
-      align-items: center;
-      justify-content: center;
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.6); align-items: center; justify-content: center;
     }
 
-    #pausebox {
-      background: #111122;
-      padding: 40px;
-      text-align: center;
-      border: 1px solid rgba(255,255,255,0.1);
-      border-radius: 12px;
-    }
-
-    #pausebox h2 {
-      color: white;
-      font-family: Arial Black, sans-serif;
-      margin-bottom: 20px;
-      letter-spacing: 2px;
-    }
+    #pausebox { background: #111122; padding: 40px; text-align: center; border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; }
+    #pausebox h2 { color: white; font-family: Arial Black, sans-serif; margin-bottom: 20px; letter-spacing: 2px; }
 
     #resumebtn {
-      background: #44aa44;
-      color: white;
-      border: none;
-      padding: 12px 24px;
-      font-size: 16px;
-      cursor: pointer;
-      font-family: Arial Black, sans-serif;
-      border-radius: 6px;
-      margin-bottom: 12px;
-      display: block;
-      width: 100%;
-      letter-spacing: 1px;
+      background: #44aa44; color: white; border: none; padding: 12px 24px;
+      font-size: 16px; cursor: pointer; font-family: Arial Black, sans-serif;
+      border-radius: 6px; margin-bottom: 12px; display: block; width: 100%; letter-spacing: 1px;
     }
 
     #quitbtn-ingame {
-      background: transparent;
-      color: #ff6666;
-      border: 1px solid rgba(255,100,100,0.3);
-      padding: 12px 24px;
-      font-size: 14px;
-      cursor: pointer;
-      font-family: Arial, sans-serif;
-      border-radius: 6px;
-      display: block;
-      width: 100%;
+      background: transparent; color: #ff6666; border: 1px solid rgba(255,100,100,0.3);
+      padding: 12px 24px; font-size: 14px; cursor: pointer; font-family: Arial, sans-serif;
+      border-radius: 6px; display: block; width: 100%;
     }
 
     #crosshair {
-      position: fixed;
-      top: 50%; left: 50%;
-      transform: translate(-50%, -50%);
-      width: 20px; height: 20px;
-      pointer-events: none;
-      display: none;
+      position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%);
+      width: 20px; height: 20px; pointer-events: none; display: none;
     }
 
-    #crosshair::before, #crosshair::after {
-      content: '';
-      position: absolute;
-      background: white;
-      opacity: 0.8;
-    }
-
-    #crosshair::before {
-      width: 2px; height: 100%;
-      left: 50%;
-      transform: translateX(-50%);
-    }
-
-    #crosshair::after {
-      width: 100%; height: 2px;
-      top: 50%;
-      transform: translateY(-50%);
-    }
+    #crosshair::before, #crosshair::after { content: ''; position: absolute; background: white; opacity: 0.8; }
+    #crosshair::before { width: 2px; height: 100%; left: 50%; transform: translateX(-50%); }
+    #crosshair::after { width: 100%; height: 2px; top: 50%; transform: translateY(-50%); }
 
     #hud-username {
-      position: fixed;
-      top: 16px;
-      left: 50%;
-      transform: translateX(-50%);
-      color: white;
-      font-family: Arial, sans-serif;
-      font-size: 13px;
-      background: rgba(0,0,0,0.4);
-      padding: 4px 12px;
-      border-radius: 20px;
-      letter-spacing: 1px;
+      position: fixed; top: 16px; left: 50%; transform: translateX(-50%);
+      color: white; font-family: Arial, sans-serif; font-size: 13px;
+      background: rgba(0,0,0,0.4); padding: 4px 12px; border-radius: 20px; letter-spacing: 1px;
     }
 
     #biome-indicator {
-      position: fixed;
-      top: 48px;
-      left: 50%;
-      transform: translateX(-50%);
-      color: rgba(255,255,255,0.6);
-      font-family: Arial, sans-serif;
-      font-size: 11px;
-      letter-spacing: 2px;
-      text-transform: uppercase;
-      pointer-events: none;
+      position: fixed; top: 48px; left: 50%; transform: translateX(-50%);
+      color: rgba(255,255,255,0.6); font-family: Arial, sans-serif; font-size: 11px;
+      letter-spacing: 2px; text-transform: uppercase; pointer-events: none;
     }
 
     #player-count {
-      position: fixed;
-      top: 16px;
-      right: 16px;
-      color: white;
-      font-family: Arial, sans-serif;
-      font-size: 12px;
-      background: rgba(0,0,0,0.4);
-      padding: 4px 12px;
-      border-radius: 20px;
+      position: fixed; top: 16px; right: 16px; color: white;
+      font-family: Arial, sans-serif; font-size: 12px;
+      background: rgba(0,0,0,0.4); padding: 4px 12px; border-radius: 20px;
     }
 
     #underwater-overlay {
-      position: fixed;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
-      background: rgba(0, 50, 150, 0.35);
-      pointer-events: none;
-      display: none;
-      z-index: 5;
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,50,150,0.35); pointer-events: none; display: none; z-index: 5;
     }
 
-    #chat-box {
-      position: fixed;
-      bottom: 100px;
-      left: 16px;
-      width: 320px;
-      z-index: 50;
-    }
-
-    #chat-messages {
-      display: flex;
-      flex-direction: column;
-      gap: 3px;
-      margin-bottom: 6px;
-      max-height: 160px;
-      overflow: hidden;
-    }
+    #chat-box { position: fixed; bottom: 100px; left: 16px; width: 320px; z-index: 50; }
+    #chat-messages { display: flex; flex-direction: column; gap: 3px; margin-bottom: 6px; max-height: 160px; overflow: hidden; }
 
     .chat-msg {
-      font-family: Arial, sans-serif;
-      font-size: 13px;
-      color: white;
-      background: rgba(0,0,0,0.45);
-      padding: 3px 8px;
-      border-radius: 4px;
-      width: fit-content;
-      max-width: 100%;
-      word-break: break-word;
+      font-family: Arial, sans-serif; font-size: 13px; color: white;
+      background: rgba(0,0,0,0.45); padding: 3px 8px; border-radius: 4px;
+      width: fit-content; max-width: 100%; word-break: break-word;
     }
 
     .chat-msg .chat-name { font-weight: bold; margin-right: 4px; }
@@ -355,83 +202,30 @@
     #chat-input-row.active { display: flex; }
 
     #chat-input {
-      flex: 1;
-      padding: 7px 10px;
-      background: rgba(0,0,0,0.7);
-      border: 1px solid rgba(255,255,255,0.2);
-      border-radius: 4px;
-      color: white;
-      font-size: 13px;
-      outline: none;
+      flex: 1; padding: 7px 10px; background: rgba(0,0,0,0.7);
+      border: 1px solid rgba(255,255,255,0.2); border-radius: 4px;
+      color: white; font-size: 13px; outline: none;
     }
 
     #chat-send {
-      padding: 7px 14px;
-      background: #44aa44;
-      border: none;
-      border-radius: 4px;
-      color: white;
-      font-family: Arial Black, sans-serif;
-      font-size: 12px;
-      cursor: pointer;
+      padding: 7px 14px; background: #44aa44; border: none; border-radius: 4px;
+      color: white; font-family: Arial Black, sans-serif; font-size: 12px; cursor: pointer;
     }
 
     #loading-screen {
-      position: fixed;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
-      background: #0d0d1a;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      z-index: 999;
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: #0d0d1a; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; z-index: 999;
     }
 
-    #loading-title {
-      font-family: Arial Black, sans-serif;
-      font-size: 48px;
-      color: white;
-      letter-spacing: 4px;
-      margin-bottom: 24px;
-      text-shadow: 3px 3px 0 #000;
-    }
-
-    #loading-bar-bg {
-      width: 300px;
-      height: 6px;
-      background: rgba(255,255,255,0.1);
-      border-radius: 3px;
-      overflow: hidden;
-      margin-bottom: 12px;
-    }
-
-    #loading-bar-fill {
-      height: 100%;
-      background: #44aa44;
-      border-radius: 3px;
-      width: 0%;
-      transition: width 0.1s;
-    }
-
-    #loading-text {
-      color: #666;
-      font-family: Arial, sans-serif;
-      font-size: 13px;
-      letter-spacing: 1px;
-    }
+    #loading-title { font-family: Arial Black, sans-serif; font-size: 48px; color: white; letter-spacing: 4px; margin-bottom: 24px; text-shadow: 3px 3px 0 #000; }
+    #loading-bar-bg { width: 300px; height: 6px; background: rgba(255,255,255,0.1); border-radius: 3px; overflow: hidden; margin-bottom: 12px; }
+    #loading-bar-fill { height: 100%; background: #44aa44; border-radius: 3px; width: 0%; transition: width 0.1s; }
+    #loading-text { color: #666; font-family: Arial, sans-serif; font-size: 13px; letter-spacing: 1px; }
 
     #debug {
-      position: fixed;
-      top: 50px;
-      left: 10px;
-      color: white;
-      font-family: monospace;
-      font-size: 12px;
-      background: rgba(0,0,0,0.4);
-      padding: 6px 10px;
-      border-radius: 4px;
-      pointer-events: none;
+      position: fixed; top: 50px; left: 10px; color: white; font-family: monospace;
+      font-size: 12px; background: rgba(0,0,0,0.4); padding: 6px 10px; border-radius: 4px; pointer-events: none;
     }
   </style>
 </head>
@@ -477,84 +271,76 @@
 <div id="chat-box">
   <div id="chat-messages"></div>
   <div id="chat-input-row">
-    <input type="text" id="chat-input" placeholder="Say something..." maxlength="100" />
+    <input type="text" id="chat-input" placeholder="Say something..." maxlength="100"/>
     <button id="chat-send" onclick="sendChat()">Send</button>
   </div>
 </div>
 
 <div id="debug"></div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
 <script src="/socket.io/socket.io.js"></script>
-
 <script>
 // ============================================================
 // BLOCK DEFINITIONS
 // ============================================================
 const BLOCK_DEFS = [
-  { id: 'grass',       name: 'Grass',        category: 'nature',  icon: 'grass_top',  textures: { top: 'grass_top', side: 'grass_side', bottom: 'dirt' }, fallbackColor: 0x44aa44 },
-  { id: 'dirt',        name: 'Dirt',          category: 'nature',  icon: 'dirt',       textures: { all: 'dirt' },   fallbackColor: 0x8B4513 },
-  { id: 'sand',        name: 'Sand',          category: 'nature',  icon: 'sand',       textures: { all: 'sand' },   fallbackColor: 0xf4d03f },
-  { id: 'snow',        name: 'Snow',          category: 'nature',  icon: 'snow',       textures: { top: 'snow', side: 'snow_side', bottom: 'stone' }, fallbackColor: 0xeaf0fb },
-  { id: 'water',       name: 'Water',         category: 'nature',  icon: 'water',      textures: { all: 'water' },  fallbackColor: 0x2266cc, transparent: true },
-  { id: 'stone',       name: 'Stone',         category: 'stone',   icon: 'stone',      textures: { all: 'stone' },  fallbackColor: 0x888888 },
-  { id: 'wood',        name: 'Wood',          category: 'wood',    icon: 'wood',       textures: { top: 'wood_top', side: 'wood', bottom: 'wood_top' }, fallbackColor: 0xa0522d },
-  { id: 'leaves',      name: 'Leaves',        category: 'wood',    icon: 'leaves',     textures: { all: 'leaves' }, fallbackColor: 0x228B22 },
-  { id: 'leaves_snow', name: 'Snowy Leaves',  category: 'wood',    icon: 'leaves',     textures: { all: 'leaves' }, fallbackColor: 0xddeeff },
-  { id: 'cactus',      name: 'Cactus',        category: 'wood',    icon: 'cactus',     textures: { all: 'cactus' }, fallbackColor: 0x4a7c3f },
+  { id:'grass',       name:'Grass',        category:'nature', icon:'grass_top',  textures:{top:'grass_top',side:'grass_side',bottom:'dirt'}, fallbackColor:0x44aa44 },
+  { id:'dirt',        name:'Dirt',         category:'nature', icon:'dirt',       textures:{all:'dirt'},   fallbackColor:0x8B4513 },
+  { id:'sand',        name:'Sand',         category:'nature', icon:'sand',       textures:{all:'sand'},   fallbackColor:0xf4d03f },
+  { id:'snow',        name:'Snow',         category:'nature', icon:'snow',       textures:{top:'snow',side:'snow_side',bottom:'stone'}, fallbackColor:0xeaf0fb },
+  { id:'water',       name:'Water',        category:'nature', icon:'water',      textures:{all:'water'},  fallbackColor:0x2266cc, transparent:true },
+  { id:'stone',       name:'Stone',        category:'stone',  icon:'stone',      textures:{all:'stone'},  fallbackColor:0x888888 },
+  { id:'wood',        name:'Wood',         category:'wood',   icon:'wood',       textures:{top:'wood_top',side:'wood',bottom:'wood_top'}, fallbackColor:0xa0522d },
+  { id:'leaves',      name:'Leaves',       category:'wood',   icon:'leaves',     textures:{all:'leaves'}, fallbackColor:0x228B22 },
+  { id:'leaves_snow', name:'Snowy Leaves', category:'wood',   icon:'leaves',     textures:{all:'leaves'}, fallbackColor:0xddeeff },
+  { id:'cactus',      name:'Cactus',       category:'wood',   icon:'cactus',     textures:{all:'cactus'}, fallbackColor:0x4a7c3f },
 ];
 
-const HOTBAR_BLOCKS = ['grass', 'dirt', 'stone', 'wood', 'sand', 'snow', 'leaves', 'cactus'];
+const HOTBAR_BLOCKS = ['grass','dirt','stone','wood','sand','snow','leaves','cactus'];
 
-function getBlockDef(id) {
-  return BLOCK_DEFS.find(b => b.id === id) || BLOCK_DEFS[0];
-}
-
-// Get the icon URL for a block — uses texture if available, fallback color div if not
-function getIconUrl(def) {
-  return `assets/textures/${def.icon}.png`;
-}
-
-function getFallbackStyle(def) {
-  return `background:#${def.fallbackColor.toString(16).padStart(6,'0')}`;
-}
+function getBlockDef(id) { return BLOCK_DEFS.find(b=>b.id===id)||BLOCK_DEFS[0]; }
+function getIconUrl(def) { return `assets/textures/${def.icon}.png`; }
+function getFallbackStyle(def) { return `background:#${def.fallbackColor.toString(16).padStart(6,'0')}`; }
 
 // ============================================================
-// TEXTURE LOADER (for 3D world)
+// TEXTURE SYSTEM
 // ============================================================
 const loadedTextures = {};
 const textureLoader = new THREE.TextureLoader();
 
 function loadBlockTexture(name) {
   if (loadedTextures[name]) return loadedTextures[name];
-  const tex = textureLoader.load(`assets/textures/${name}.png`, undefined, undefined, () => {});
+  const tex = textureLoader.load(`assets/textures/${name}.png`,undefined,undefined,()=>{});
   tex.magFilter = THREE.NearestFilter;
   tex.minFilter = THREE.NearestFilter;
   loadedTextures[name] = tex;
   return tex;
 }
 
+// Pre-load all textures
 BLOCK_DEFS.forEach(def => {
   const t = def.textures;
-  const names = new Set([t.all, t.top, t.side, t.bottom].filter(Boolean));
-  names.forEach(n => loadBlockTexture(n));
+  [t.all,t.top,t.side,t.bottom].filter(Boolean).forEach(n=>loadBlockTexture(n));
 });
 
-function makeMaterials(def) {
+function getMaterial(def, face) {
+  // face: 0=right,1=left,2=top,3=bottom,4=front,5=back
   const t = def.textures;
-  const opts = def.transparent ? { transparent: true, opacity: 0.7 } : {};
+  const opts = def.transparent ? {transparent:true,opacity:0.7} : {};
+  let texName;
+  if (t.all) texName = t.all;
+  else if (face===2) texName = t.top;
+  else if (face===3) texName = t.bottom||t.side;
+  else texName = t.side;
 
-  function mat(texName) {
-    if (texName && loadedTextures[texName]) {
-      return new THREE.MeshLambertMaterial({ map: loadedTextures[texName], ...opts });
-    }
-    return new THREE.MeshLambertMaterial({ color: def.fallbackColor, ...opts });
+  if (texName && loadedTextures[texName]) {
+    return new THREE.MeshLambertMaterial({map:loadedTextures[texName],...opts});
   }
+  return new THREE.MeshLambertMaterial({color:def.fallbackColor,...opts});
+}
 
-  if (t.all) { const m = mat(t.all); return [m,m,m,m,m,m]; }
-  const side = mat(t.side);
-  return [side, side, mat(t.top), mat(t.bottom||t.side), side, side];
+function makeMaterials(def) {
+  return [0,1,2,3,4,5].map(f=>getMaterial(def,f));
 }
 
 // ============================================================
@@ -566,27 +352,25 @@ let selectedSlotIndex = 0;
 function buildHotbar() {
   const hotbar = document.getElementById('hotbar');
   hotbar.innerHTML = '';
-
-  HOTBAR_BLOCKS.forEach((blockId, i) => {
+  HOTBAR_BLOCKS.forEach((blockId,i) => {
     const def = getBlockDef(blockId);
     const slot = document.createElement('div');
-    slot.className = 'slot' + (i === 0 ? ' active' : '');
+    slot.className = 'slot'+(i===0?' active':'');
     slot.dataset.index = i;
-    slot.dataset.block = blockId;
 
     const num = document.createElement('div');
     num.className = 'slot-number';
-    num.textContent = i + 1;
+    num.textContent = i+1;
 
     const img = document.createElement('img');
     img.className = 'slot-icon';
     img.src = getIconUrl(def);
     img.alt = def.name;
     img.onerror = function() {
-      this.style.display = 'none';
+      this.style.display='none';
       const div = document.createElement('div');
       div.style.cssText = `width:36px;height:36px;border-radius:4px;${getFallbackStyle(def)}`;
-      slot.insertBefore(div, this.nextSibling);
+      slot.insertBefore(div,this.nextSibling);
     };
 
     const tooltip = document.createElement('div');
@@ -597,38 +381,33 @@ function buildHotbar() {
     slot.appendChild(img);
     slot.appendChild(tooltip);
     hotbar.appendChild(slot);
-
-    slot.addEventListener('click', () => selectSlot(i));
+    slot.addEventListener('click',()=>selectSlot(i));
   });
 }
 
 function selectSlot(index) {
   selectedSlotIndex = index;
   selectedBlock = HOTBAR_BLOCKS[index];
-  document.querySelectorAll('.slot').forEach((s, i) => {
-    s.classList.toggle('active', i === index);
-  });
+  document.querySelectorAll('.slot').forEach((s,i)=>s.classList.toggle('active',i===index));
 }
 
 function switchSlot(index) {
-  if (index >= 0 && index < HOTBAR_BLOCKS.length) selectSlot(index);
+  if (index>=0&&index<HOTBAR_BLOCKS.length) selectSlot(index);
 }
 
 // ============================================================
 // INVENTORY UI
 // ============================================================
 function buildInventory() {
-  const categories = {
-    nature:  document.getElementById('inv-nature'),
-    stone:   document.getElementById('inv-stone'),
-    wood:    document.getElementById('inv-wood'),
-    special: document.getElementById('inv-special'),
+  const cats = {
+    nature: document.getElementById('inv-nature'),
+    stone:  document.getElementById('inv-stone'),
+    wood:   document.getElementById('inv-wood'),
+    special:document.getElementById('inv-special'),
   };
-
   BLOCK_DEFS.forEach(def => {
-    if (def.id === 'water') return;
-    const cat = categories[def.category] || categories.special;
-
+    if (def.id==='water') return;
+    const cat = cats[def.category]||cats.special;
     const slot = document.createElement('div');
     slot.className = 'inv-slot';
     slot.dataset.block = def.id;
@@ -638,10 +417,10 @@ function buildInventory() {
     img.src = getIconUrl(def);
     img.alt = def.name;
     img.onerror = function() {
-      this.style.display = 'none';
+      this.style.display='none';
       const div = document.createElement('div');
       div.style.cssText = `width:40px;height:40px;border-radius:4px;${getFallbackStyle(def)}`;
-      slot.insertBefore(div, this);
+      slot.insertBefore(div,this);
     };
 
     const label = document.createElement('div');
@@ -652,63 +431,46 @@ function buildInventory() {
     slot.appendChild(label);
     cat.appendChild(slot);
 
-    slot.addEventListener('click', () => {
+    slot.addEventListener('click',()=>{
       selectedBlock = def.id;
       const hi = HOTBAR_BLOCKS.indexOf(def.id);
-      if (hi !== -1) selectSlot(hi);
-      document.querySelectorAll('.inv-slot').forEach(s =>
-        s.classList.toggle('selected', s.dataset.block === def.id)
-      );
+      if (hi!==-1) selectSlot(hi);
+      document.querySelectorAll('.inv-slot').forEach(s=>s.classList.toggle('selected',s.dataset.block===def.id));
       closeInventory();
     });
   });
 }
 
-function openInventory() {
-  document.getElementById('inventory').classList.add('open');
-  document.exitPointerLock();
-}
-
-function closeInventory() {
-  document.getElementById('inventory').classList.remove('open');
-  renderer.domElement.requestPointerLock();
-}
+function openInventory() { document.getElementById('inventory').classList.add('open'); document.exitPointerLock(); }
+function closeInventory() { document.getElementById('inventory').classList.remove('open'); renderer.domElement.requestPointerLock(); }
 
 // ============================================================
 // SIMPLEX NOISE
 // ============================================================
 class SimplexNoise {
-  constructor(seed = Math.random()) {
-    this.p = new Uint8Array(256);
-    for (let i = 0; i < 256; i++) this.p[i] = i;
-    let s = seed * 2147483647;
-    for (let i = 255; i > 0; i--) {
-      s = (s * 16807) % 2147483647;
-      const j = ((s & 0x7fffffff) / 2147483647 * (i + 1)) | 0;
-      [this.p[i], this.p[j]] = [this.p[j], this.p[i]];
-    }
-    this.perm = new Uint8Array(512);
-    this.permMod12 = new Uint8Array(512);
-    for (let i = 0; i < 512; i++) {
-      this.perm[i] = this.p[i & 255];
-      this.permMod12[i] = this.perm[i] % 12;
-    }
+  constructor(seed=Math.random()) {
+    this.p=new Uint8Array(256);
+    for(let i=0;i<256;i++)this.p[i]=i;
+    let s=seed*2147483647;
+    for(let i=255;i>0;i--){s=(s*16807)%2147483647;const j=((s&0x7fffffff)/2147483647*(i+1))|0;[this.p[i],this.p[j]]=[this.p[j],this.p[i]];}
+    this.perm=new Uint8Array(512);this.permMod12=new Uint8Array(512);
+    for(let i=0;i<512;i++){this.perm[i]=this.p[i&255];this.permMod12[i]=this.perm[i]%12;}
   }
-  noise2D(xin, yin) {
-    const grad3 = [[1,1,0],[-1,1,0],[1,-1,0],[-1,-1,0],[1,0,1],[-1,0,1],[1,0,-1],[-1,0,-1],[0,1,1],[0,-1,1],[0,1,-1],[0,-1,-1]];
-    const F2 = 0.5*(Math.sqrt(3)-1), G2 = (3-Math.sqrt(3))/6;
-    const s=(xin+yin)*F2, i=Math.floor(xin+s), j=Math.floor(yin+s);
-    const t=(i+j)*G2, X0=i-t, Y0=j-t, x0=xin-X0, y0=yin-Y0;
-    const i1=x0>y0?1:0, j1=x0>y0?0:1;
-    const x1=x0-i1+G2, y1=y0-j1+G2, x2=x0-1+2*G2, y2=y0-1+2*G2;
-    const ii=i&255, jj=j&255;
+  noise2D(xin,yin){
+    const grad3=[[1,1,0],[-1,1,0],[1,-1,0],[-1,-1,0],[1,0,1],[-1,0,1],[1,0,-1],[-1,0,-1],[0,1,1],[0,-1,1],[0,1,-1],[0,-1,-1]];
+    const F2=0.5*(Math.sqrt(3)-1),G2=(3-Math.sqrt(3))/6;
+    const s=(xin+yin)*F2,i=Math.floor(xin+s),j=Math.floor(yin+s);
+    const t=(i+j)*G2,x0=xin-(i-t),y0=yin-(j-t);
+    const i1=x0>y0?1:0,j1=x0>y0?0:1;
+    const x1=x0-i1+G2,y1=y0-j1+G2,x2=x0-1+2*G2,y2=y0-1+2*G2;
+    const ii=i&255,jj=j&255;
     const gi0=this.permMod12[ii+this.perm[jj]];
     const gi1=this.permMod12[ii+i1+this.perm[jj+j1]];
     const gi2=this.permMod12[ii+1+this.perm[jj+1]];
     let n0=0,n1=0,n2=0;
-    let t0=0.5-x0*x0-y0*y0; if(t0>=0){t0*=t0;n0=t0*t0*(grad3[gi0][0]*x0+grad3[gi0][1]*y0);}
-    let t1=0.5-x1*x1-y1*y1; if(t1>=0){t1*=t1;n1=t1*t1*(grad3[gi1][0]*x1+grad3[gi1][1]*y1);}
-    let t2=0.5-x2*x2-y2*y2; if(t2>=0){t2*=t2;n2=t2*t2*(grad3[gi2][0]*x2+grad3[gi2][1]*y2);}
+    let t0=0.5-x0*x0-y0*y0;if(t0>=0){t0*=t0;n0=t0*t0*(grad3[gi0][0]*x0+grad3[gi0][1]*y0);}
+    let t1=0.5-x1*x1-y1*y1;if(t1>=0){t1*=t1;n1=t1*t1*(grad3[gi1][0]*x1+grad3[gi1][1]*y1);}
+    let t2=0.5-x2*x2-y2*y2;if(t2>=0){t2*=t2;n2=t2*t2*(grad3[gi2][0]*x2+grad3[gi2][1]*y2);}
     return 70*(n0+n1+n2);
   }
 }
@@ -716,18 +478,19 @@ class SimplexNoise {
 // ============================================================
 // SCENE SETUP
 // ============================================================
-const username = localStorage.getItem('dogblox_username') || 'Guest';
+const username = localStorage.getItem('dogblox_username')||'Guest';
 document.getElementById('hud-username').textContent = username;
 
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x87ceeb);
-scene.fog = new THREE.Fog(0x87ceeb, 20, 60);
+scene.fog = new THREE.Fog(0x87ceeb,20,60);
 
-const camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
-let yaw = 0, pitch = 0;
+const camera = new THREE.PerspectiveCamera(75,window.innerWidth/window.innerHeight,0.1,1000);
+let yaw=0,pitch=0;
 
-const renderer = new THREE.WebGLRenderer({ antialias: true });
-renderer.setSize(window.innerWidth, window.innerHeight);
+const renderer = new THREE.WebGLRenderer({antialias:true});
+renderer.setSize(window.innerWidth,window.innerHeight);
+renderer.setPixelRatio(Math.min(window.devicePixelRatio,1));
 document.body.appendChild(renderer.domElement);
 
 // ============================================================
@@ -736,179 +499,249 @@ document.body.appendChild(renderer.domElement);
 const heightNoise = new SimplexNoise(42);
 const biomeNoise  = new SimplexNoise(99);
 
-function getHeightRaw(x, z) {
+function getHeightRaw(x,z) {
   return heightNoise.noise2D(x*0.015,z*0.015)*8 + heightNoise.noise2D(x*0.06,z*0.06)*2;
 }
 
-function getBiomeValue(x, z) { return biomeNoise.noise2D(x*0.004,z*0.004); }
+function getBiomeValue(x,z) { return biomeNoise.noise2D(x*0.004,z*0.004); }
 
 const BIOMES = {
-  desert:    { name:'Desert',       topBlock:'sand',  skyColor:new THREE.Color(0xd4a843), heightMult:0.4, treeChance:0.3, treeStyle:'cactus'  },
-  plains:    { name:'Plains',       topBlock:'grass', skyColor:new THREE.Color(0x87ceeb), heightMult:0.5, treeChance:0.2, treeStyle:'normal'  },
-  forest:    { name:'Forest',       topBlock:'grass', skyColor:new THREE.Color(0x6aab6a), heightMult:0.8, treeChance:0.9, treeStyle:'normal'  },
-  snowy:     { name:'Snowy Tundra', topBlock:'snow',  skyColor:new THREE.Color(0xc8ddf0), heightMult:0.6, treeChance:0.3, treeStyle:'snowy'   },
-  mountains: { name:'Mountains',    topBlock:'stone', skyColor:new THREE.Color(0x7a9ab5), heightMult:2.0, treeChance:0.1, treeStyle:'normal'  },
+  desert:    {name:'Desert',       topBlock:'sand',  skyColor:new THREE.Color(0xd4a843),heightMult:0.4,treeChance:0.3,treeStyle:'cactus'},
+  plains:    {name:'Plains',       topBlock:'grass', skyColor:new THREE.Color(0x87ceeb),heightMult:0.5,treeChance:0.2,treeStyle:'normal'},
+  forest:    {name:'Forest',       topBlock:'grass', skyColor:new THREE.Color(0x6aab6a),heightMult:0.8,treeChance:0.9,treeStyle:'normal'},
+  snowy:     {name:'Snowy Tundra', topBlock:'snow',  skyColor:new THREE.Color(0xc8ddf0),heightMult:0.6,treeChance:0.3,treeStyle:'snowy'},
+  mountains: {name:'Mountains',    topBlock:'stone', skyColor:new THREE.Color(0x7a9ab5),heightMult:2.0,treeChance:0.1,treeStyle:'normal'},
 };
 
-function getBiome(x, z) {
-  const v = getBiomeValue(x, z);
-  if (v < -0.5) return BIOMES.desert;
-  if (v < -0.1) return BIOMES.plains;
-  if (v <  0.2) return BIOMES.forest;
-  if (v <  0.5) return BIOMES.snowy;
+function getBiome(x,z) {
+  const v=getBiomeValue(x,z);
+  if(v<-0.5)return BIOMES.desert;
+  if(v<-0.1)return BIOMES.plains;
+  if(v< 0.2)return BIOMES.forest;
+  if(v< 0.5)return BIOMES.snowy;
   return BIOMES.mountains;
 }
 
-function getHeightForBiome(x, z) {
-  return Math.floor(getHeightRaw(x,z) * getBiome(x,z).heightMult);
+function getHeightForBiome(x,z) {
+  return Math.floor(getHeightRaw(x,z)*getBiome(x,z).heightMult);
 }
 
 // ============================================================
-// WATER + CHUNK SYSTEM
+// WATER
 // ============================================================
 const WATER_LEVEL = 0;
-const waterMeshes = [];
+
+// ============================================================
+// CHUNK SYSTEM — MERGED MESHES
+// ============================================================
 const CHUNK_SIZE = 16;
 const RENDER_DISTANCE = 2;
-const loadedChunks = {};
-const blockMap = {};
-const freeBlocks = [];
+const loadedChunks = {};  // key -> { group, meshes[] }
+const blockMap = {};      // collision map
+const freeBlocks = [];    // individually placed/broken blocks
 
-function worldToChunk(x, z) { return { cx:Math.floor(x/CHUNK_SIZE), cz:Math.floor(z/CHUNK_SIZE) }; }
-function chunkKey(cx, cz) { return `${cx},${cz}`; }
+function worldToChunk(x,z) { return {cx:Math.floor(x/CHUNK_SIZE),cz:Math.floor(z/CHUNK_SIZE)}; }
+function chunkKey(cx,cz) { return `${cx},${cz}`; }
 
-function addBlockMesh(group, x, y, z, blockId) {
-  const def = getBlockDef(blockId);
-  const mesh = new THREE.Mesh(new THREE.BoxGeometry(1,1,1), makeMaterials(def));
-  mesh.position.set(x,y,z);
-  mesh.userData.type = blockId;
-  group.add(mesh);
-  if (blockId !== 'water') blockMap[`${x},${y},${z}`] = true;
-  if (blockId === 'water') { mesh.userData.isWater=true; waterMeshes.push(mesh); }
-  return mesh;
-}
-
-function generateChunk(cx, cz) {
+// Build a single merged mesh for a chunk
+// This is the key performance improvement —
+// instead of 500+ individual meshes per chunk
+// we merge them into one mesh per material type
+function generateChunk(cx,cz) {
   const key = chunkKey(cx,cz);
   if (loadedChunks[key]) return;
-  const group = new THREE.Group();
+
+  // Collect all block positions and types
+  const blockData = []; // {x,y,z,blockId}
 
   for (let lx=0;lx<CHUNK_SIZE;lx++) {
     for (let lz=0;lz<CHUNK_SIZE;lz++) {
-      const wx=cx*CHUNK_SIZE+lx, wz=cz*CHUNK_SIZE+lz;
+      const wx=cx*CHUNK_SIZE+lx;
+      const wz=cz*CHUNK_SIZE+lz;
       const biome=getBiome(wx,wz);
       const h=getHeightForBiome(wx,wz);
-      addBlockMesh(group,wx,h,wz,biome.topBlock);
-      addBlockMesh(group,wx,h-1,wz,biome.topBlock==='sand'?'sand':'dirt');
-      if (h<WATER_LEVEL) for (let wy=h+1;wy<=WATER_LEVEL;wy++) addBlockMesh(group,wx,wy,wz,'water');
+
+      blockData.push({x:wx,y:h,z:wz,blockId:biome.topBlock});
+      blockData.push({x:wx,y:h-1,z:wz,blockId:biome.topBlock==='sand'?'sand':'dirt'});
+
+      if (h<WATER_LEVEL) {
+        for (let wy=h+1;wy<=WATER_LEVEL;wy++) {
+          blockData.push({x:wx,y:wy,z:wz,blockId:'water'});
+        }
+      }
     }
   }
 
+  // Add trees
   const bc=getBiome(cx*CHUNK_SIZE+8,cz*CHUNK_SIZE+8);
   if (Math.random()<bc.treeChance) {
     const count=Math.floor(Math.random()*3)+1;
     for (let t=0;t<count;t++) {
       const lx=Math.floor(Math.random()*(CHUNK_SIZE-4))+2;
       const lz=Math.floor(Math.random()*(CHUNK_SIZE-4))+2;
-      const wx=cx*CHUNK_SIZE+lx, wz=cz*CHUNK_SIZE+lz;
+      const wx=cx*CHUNK_SIZE+lx;
+      const wz=cz*CHUNK_SIZE+lz;
       const h=getHeightForBiome(wx,wz);
       if (h<WATER_LEVEL) continue;
       const nb=[getHeightForBiome(wx+1,wz),getHeightForBiome(wx-1,wz),getHeightForBiome(wx,wz+1),getHeightForBiome(wx,wz-1)];
       if (Math.max(...nb.map(n=>Math.abs(n-h)))>2) continue;
-      if (bc.treeStyle==='cactus') buildCactus(group,wx,h+1,wz);
-      else if (bc.treeStyle==='snowy') buildSnowyTree(group,wx,h+1,wz);
-      else buildTree(group,wx,h+1,wz);
+      if (bc.treeStyle==='cactus') collectCactus(blockData,wx,h+1,wz);
+      else if (bc.treeStyle==='snowy') collectSnowyTree(blockData,wx,h+1,wz);
+      else collectTree(blockData,wx,h+1,wz);
     }
   }
+
+  // Register solid blocks in blockMap for collision
+  blockData.forEach(b=>{
+    if (b.blockId!=='water') blockMap[`${b.x},${b.y},${b.z}`]=true;
+  });
+
+  // Group blocks by blockId for merging
+  const byType = {};
+  blockData.forEach(b=>{
+    if (!byType[b.blockId]) byType[b.blockId]=[];
+    byType[b.blockId].push(b);
+  });
+
+  const group = new THREE.Group();
+  const geo = new THREE.BoxGeometry(1,1,1);
+
+  // For each block type, merge all geometries into one
+  Object.entries(byType).forEach(([blockId,blocks])=>{
+    const def = getBlockDef(blockId);
+
+    // Water gets individual meshes (transparency sorting issues with merged)
+    if (blockId==='water') {
+      const mat = new THREE.MeshLambertMaterial({color:def.fallbackColor,transparent:true,opacity:0.65});
+      blocks.forEach(b=>{
+        const mesh = new THREE.Mesh(geo,mat);
+        mesh.position.set(b.x,b.y,b.z);
+        mesh.userData.isWater=true;
+        group.add(mesh);
+      });
+      return;
+    }
+
+    // For solid blocks — merge all into one geometry
+    const geometries = blocks.map(b=>{
+      const g = geo.clone();
+      g.translate(b.x,b.y,b.z);
+      return g;
+    });
+
+    const merged = THREE.BufferGeometryUtils.mergeBufferGeometries(geometries,false);
+    if (!merged) return;
+
+    // Use the top texture as the material for the whole merged mesh
+    // This is a simplification — full per-face texturing on merged meshes
+    // requires more complex UV manipulation which we'll add later
+    const t = def.textures;
+    const texName = t.top||t.all;
+    let mat;
+    if (texName&&loadedTextures[texName]) {
+      mat = new THREE.MeshLambertMaterial({map:loadedTextures[texName]});
+    } else {
+      mat = new THREE.MeshLambertMaterial({color:def.fallbackColor});
+    }
+
+    const mesh = new THREE.Mesh(merged,mat);
+    mesh.userData.blockId = blockId;
+    mesh.userData.isMerged = true;
+    group.add(mesh);
+  });
 
   scene.add(group);
-  loadedChunks[key]=group;
+  loadedChunks[key] = group;
 }
 
-function buildTree(group,x,y,z) {
+function collectTree(blockData,x,y,z) {
   const h=Math.floor(Math.random()*2)+3;
-  for (let i=0;i<h;i++) addBlockMesh(group,x,y+i,z,'wood');
+  for(let i=0;i<h;i++) blockData.push({x,y:y+i,z,blockId:'wood'});
   const top=y+h;
-  for (let lx=-2;lx<=2;lx++) for (let lz=-2;lz<=2;lz++) for (let ly=0;ly<=2;ly++) {
-    if (Math.abs(lx)===2&&Math.abs(lz)===2&&ly===0) continue;
-    addBlockMesh(group,x+lx,top+ly,z+lz,'leaves');
+  for(let lx=-2;lx<=2;lx++) for(let lz=-2;lz<=2;lz++) for(let ly=0;ly<=2;ly++){
+    if(Math.abs(lx)===2&&Math.abs(lz)===2&&ly===0)continue;
+    blockData.push({x:x+lx,y:top+ly,z:z+lz,blockId:'leaves'});
   }
 }
 
-function buildSnowyTree(group,x,y,z) {
+function collectSnowyTree(blockData,x,y,z) {
   const h=Math.floor(Math.random()*2)+4;
-  for (let i=0;i<h;i++) addBlockMesh(group,x,y+i,z,'wood');
+  for(let i=0;i<h;i++) blockData.push({x,y:y+i,z,blockId:'wood'});
   const top=y+h;
-  for (let ly=0;ly<=3;ly++) {
+  for(let ly=0;ly<=3;ly++){
     const r=2-Math.floor(ly*0.8);
-    for (let lx=-r;lx<=r;lx++) for (let lz=-r;lz<=r;lz++) {
-      addBlockMesh(group,x+lx,top+ly,z+lz,ly%2===0?'leaves_snow':'leaves');
+    for(let lx=-r;lx<=r;lx++) for(let lz=-r;lz<=r;lz++){
+      blockData.push({x:x+lx,y:top+ly,z:z+lz,blockId:ly%2===0?'leaves_snow':'leaves'});
     }
   }
 }
 
-function buildCactus(group,x,y,z) {
+function collectCactus(blockData,x,y,z) {
   const h=Math.floor(Math.random()*2)+2;
-  for (let i=0;i<h;i++) addBlockMesh(group,x,y+i,z,'cactus');
+  for(let i=0;i<h;i++) blockData.push({x,y:y+i,z,blockId:'cactus'});
 }
 
 function unloadChunk(cx,cz) {
   const key=chunkKey(cx,cz);
   const group=loadedChunks[key];
   if (!group) return;
-  group.children.forEach(mesh => {
-    const p=mesh.position;
-    delete blockMap[`${Math.round(p.x)},${Math.round(p.y)},${Math.round(p.z)}`];
-    const wi=waterMeshes.indexOf(mesh);
-    if (wi!==-1) waterMeshes.splice(wi,1);
-  });
+
+  // Remove from blockMap — we need to scan the chunk area
+  for (let lx=0;lx<CHUNK_SIZE;lx++) {
+    for (let lz=0;lz<CHUNK_SIZE;lz++) {
+      const wx=cx*CHUNK_SIZE+lx;
+      const wz=cz*CHUNK_SIZE+lz;
+      const h=getHeightForBiome(wx,wz);
+      for (let y=h-5;y<=h+10;y++) {
+        delete blockMap[`${wx},${y},${wz}`];
+      }
+    }
+  }
+
   scene.remove(group);
   delete loadedChunks[key];
 }
 
 function updateChunks() {
   const {cx:pcx,cz:pcz}=worldToChunk(player.position.x,player.position.z);
-  for (let dx=-RENDER_DISTANCE;dx<=RENDER_DISTANCE;dx++)
-    for (let dz=-RENDER_DISTANCE;dz<=RENDER_DISTANCE;dz++)
+  for(let dx=-RENDER_DISTANCE;dx<=RENDER_DISTANCE;dx++)
+    for(let dz=-RENDER_DISTANCE;dz<=RENDER_DISTANCE;dz++)
       generateChunk(pcx+dx,pcz+dz);
-  for (const key of Object.keys(loadedChunks)) {
-    const [cx,cz]=key.split(',').map(Number);
-    if (Math.abs(cx-pcx)>RENDER_DISTANCE+1||Math.abs(cz-pcz)>RENDER_DISTANCE+1) unloadChunk(cx,cz);
+  for(const key of Object.keys(loadedChunks)){
+    const[cx,cz]=key.split(',').map(Number);
+    if(Math.abs(cx-pcx)>RENDER_DISTANCE+1||Math.abs(cz-pcz)>RENDER_DISTANCE+1)unloadChunk(cx,cz);
   }
 }
 
 // ============================================================
 // REMOTE PLAYERS
 // ============================================================
-const remotePlayers = {};
+const remotePlayers={};
 
-function createRemotePlayer(data) {
-  if (remotePlayers[data.id]) return;
+function createRemotePlayer(data){
+  if(remotePlayers[data.id])return;
   const group=new THREE.Group();
   const body=new THREE.Mesh(new THREE.BoxGeometry(0.6,1.2,0.4),new THREE.MeshLambertMaterial({color:0x4488ff}));
-  body.position.y=0.6; group.add(body);
+  body.position.y=0.6;group.add(body);
   const head=new THREE.Mesh(new THREE.BoxGeometry(0.6,0.6,0.6),new THREE.MeshLambertMaterial({color:0x6699ff}));
-  head.position.y=1.5; group.add(head);
+  head.position.y=1.5;group.add(head);
   const legL=new THREE.Mesh(new THREE.BoxGeometry(0.25,0.7,0.25),new THREE.MeshLambertMaterial({color:0x2255aa}));
-  legL.position.set(-0.18,-0.35,0); group.add(legL);
-  const legR=legL.clone(); legR.position.set(0.18,-0.35,0); group.add(legR);
+  legL.position.set(-0.18,-0.35,0);group.add(legL);
+  const legR=legL.clone();legR.position.set(0.18,-0.35,0);group.add(legR);
   const label=makeNameLabel(data.username||'Player',data.rank||'Pup');
-  label.position.y=2.2; group.add(label);
+  label.position.y=2.2;group.add(label);
   group.position.set(data.x,data.y,data.z);
   scene.add(group);
   remotePlayers[data.id]={group,data};
 }
 
-function makeNameLabel(username,rank) {
+function makeNameLabel(username,rank){
   const canvas=document.createElement('canvas');
-  canvas.width=256; canvas.height=64;
+  canvas.width=256;canvas.height=64;
   const ctx=canvas.getContext('2d');
-  ctx.fillStyle='rgba(0,0,0,0.5)';
-  ctx.roundRect(0,8,256,48,8); ctx.fill();
-  ctx.font='bold 22px Arial'; ctx.fillStyle='white'; ctx.textAlign='center';
-  ctx.fillText(username,128,36);
-  ctx.font='16px Arial'; ctx.fillStyle='#aaaaaa';
-  ctx.fillText('['+rank+']',128,54);
+  ctx.fillStyle='rgba(0,0,0,0.5)';ctx.roundRect(0,8,256,48,8);ctx.fill();
+  ctx.font='bold 22px Arial';ctx.fillStyle='white';ctx.textAlign='center';ctx.fillText(username,128,36);
+  ctx.font='16px Arial';ctx.fillStyle='#aaaaaa';ctx.fillText('['+rank+']',128,54);
   const tex=new THREE.CanvasTexture(canvas);
   const mat=new THREE.MeshBasicMaterial({map:tex,transparent:true,depthWrite:false});
   const plane=new THREE.Mesh(new THREE.PlaneGeometry(2,0.5),mat);
@@ -916,9 +749,9 @@ function makeNameLabel(username,rank) {
   return plane;
 }
 
-function updateRemotePlayer(data) {
+function updateRemotePlayer(data){
   const rp=remotePlayers[data.id];
-  if (!rp) { createRemotePlayer(data); return; }
+  if(!rp){createRemotePlayer(data);return;}
   rp.group.position.x+=(data.x-rp.group.position.x)*0.2;
   rp.group.position.y+=(data.y-rp.group.position.y)*0.2;
   rp.group.position.z+=(data.z-rp.group.position.z)*0.2;
@@ -926,9 +759,9 @@ function updateRemotePlayer(data) {
   rp.data=data;
 }
 
-function removeRemotePlayer(id) {
+function removeRemotePlayer(id){
   const rp=remotePlayers[id];
-  if (!rp) return;
+  if(!rp)return;
   scene.remove(rp.group);
   delete remotePlayers[id];
 }
@@ -945,17 +778,14 @@ player.add(fallbackMesh);
 const gltfLoader=new THREE.GLTFLoader();
 gltfLoader.load('assets/player.gltf',function(gltf){
   player.remove(fallbackMesh);
-  const model=gltf.scene;
-  model.position.y=-0.5;
-  player.add(model);
+  const model=gltf.scene;model.position.y=-0.5;player.add(model);
 },undefined,()=>{});
 
 // ============================================================
 // LIGHTS
 // ============================================================
 const sunLight=new THREE.DirectionalLight(0xffffff,1);
-sunLight.position.set(5,10,5);
-scene.add(sunLight);
+sunLight.position.set(5,10,5);scene.add(sunLight);
 scene.add(new THREE.AmbientLight(0xffffff,0.4));
 
 // ============================================================
@@ -970,7 +800,7 @@ function isSolid(x,y,z){return !!blockMap[`${Math.round(x)},${Math.round(y)},${M
 
 function collidesAt(x,y,z){
   const yLevels=[Math.round(y),Math.round(y+1)];
-  for (const ly of yLevels){
+  for(const ly of yLevels){
     if(isSolid(x-PLAYER_RADIUS,ly,z-PLAYER_RADIUS))return true;
     if(isSolid(x+PLAYER_RADIUS,ly,z-PLAYER_RADIUS))return true;
     if(isSolid(x-PLAYER_RADIUS,ly,z+PLAYER_RADIUS))return true;
@@ -983,31 +813,22 @@ document.addEventListener('keydown',function(event){
   if(chatOpen){if(event.key==='Escape')closeChat();return;}
   keys[event.key]=true;
   if(event.key===' '){if(inWater)velocityY=0.08;}
-  if(event.key==='1')switchSlot(0);
-  if(event.key==='2')switchSlot(1);
-  if(event.key==='3')switchSlot(2);
-  if(event.key==='4')switchSlot(3);
-  if(event.key==='5')switchSlot(4);
-  if(event.key==='6')switchSlot(5);
-  if(event.key==='7')switchSlot(6);
-  if(event.key==='8')switchSlot(7);
+  if(event.key==='1')switchSlot(0);if(event.key==='2')switchSlot(1);
+  if(event.key==='3')switchSlot(2);if(event.key==='4')switchSlot(3);
+  if(event.key==='5')switchSlot(4);if(event.key==='6')switchSlot(5);
+  if(event.key==='7')switchSlot(6);if(event.key==='8')switchSlot(7);
   if(event.key==='e'||event.key==='E'){
     const inv=document.getElementById('inventory');
-    if(inv.classList.contains('open'))closeInventory();
-    else openInventory();
+    if(inv.classList.contains('open'))closeInventory();else openInventory();
   }
   if(event.key==='f'||event.key==='F'){
-    isFirstPerson=!isFirstPerson;
-    player.visible=!isFirstPerson;
+    isFirstPerson=!isFirstPerson;player.visible=!isFirstPerson;
     document.getElementById('crosshair').style.display=isFirstPerson?'block':'none';
   }
   if(event.key==='t'||event.key==='T')openChat();
 });
 
-document.addEventListener('keyup',function(event){
-  keys[event.key]=false;
-  if(event.key===' ')jumpPressed=false;
-});
+document.addEventListener('keyup',function(event){keys[event.key]=false;if(event.key===' ')jumpPressed=false;});
 
 document.addEventListener('wheel',function(event){
   if(document.pointerLockElement!==renderer.domElement)return;
@@ -1026,9 +847,30 @@ function addChatMessage(u,m){const box=document.getElementById('chat-messages');
 
 // ============================================================
 // BLOCK PLACING / BREAKING
+// Merged chunks can't be raycasted per-block easily
+// so we use a separate invisible collision mesh for raycasting
+// and keep freeBlocks for placed blocks
 // ============================================================
 const raycaster=new THREE.Raycaster();
+raycaster.far = 8; // limit reach distance
 const mouse=new THREE.Vector2();
+
+// We keep a separate array of raycastable meshes
+// For chunks we add invisible box meshes at each block position
+// This is lighter than raycasting merged geometry
+const raycastMeshes = []; // individual invisible boxes for raycasting
+
+function addRaycastBlock(x,y,z,blockId) {
+  const mesh = new THREE.Mesh(
+    new THREE.BoxGeometry(1,1,1),
+    new THREE.MeshBasicMaterial({visible:false})
+  );
+  mesh.position.set(x,y,z);
+  mesh.userData.blockId = blockId;
+  mesh.userData.isRaycast = true;
+  scene.add(mesh);
+  raycastMeshes.push(mesh);
+}
 
 document.addEventListener('mousedown',function(event){
   if(chatOpen)return;
@@ -1040,12 +882,10 @@ document.addEventListener('mousedown',function(event){
   if(isFirstPerson){mouse.x=0;mouse.y=0;}
   else{mouse.x=(event.clientX/window.innerWidth)*2-1;mouse.y=-(event.clientY/window.innerHeight)*2+1;}
 
-  const allMeshes=[];
-  for(const group of Object.values(loadedChunks))group.children.forEach(m=>{if(!m.userData.isWater)allMeshes.push(m);});
-  freeBlocks.forEach(m=>allMeshes.push(m));
-
+  // Raycast against both raycast meshes and free blocks
+  const targets=[...raycastMeshes,...freeBlocks];
   raycaster.setFromCamera(mouse,camera);
-  const intersects=raycaster.intersectObjects(allMeshes);
+  const intersects=raycaster.intersectObjects(targets);
 
   if(intersects.length>0){
     const hit=intersects[0];
@@ -1053,14 +893,24 @@ document.addEventListener('mousedown',function(event){
     const rx=Math.round(rp.x),ry=Math.round(rp.y),rz=Math.round(rp.z);
 
     if(event.button===2){
+      // Break block
       delete blockMap[`${rx},${ry},${rz}`];
-      hit.object.parent.remove(hit.object);
-      const fi=freeBlocks.indexOf(hit.object);
-      if(fi!==-1)freeBlocks.splice(fi,1);
+
+      // Remove raycast mesh
+      const ri=raycastMeshes.findIndex(m=>Math.round(m.position.x)===rx&&Math.round(m.position.y)===ry&&Math.round(m.position.z)===rz);
+      if(ri!==-1){scene.remove(raycastMeshes[ri]);raycastMeshes.splice(ri,1);}
+
+      // Remove free block if it exists
+      const fi=freeBlocks.findIndex(m=>Math.round(m.position.x)===rx&&Math.round(m.position.y)===ry&&Math.round(m.position.z)===rz);
+      if(fi!==-1){scene.remove(freeBlocks[fi]);freeBlocks.splice(fi,1);}
+
       socket.emit('blockChange',{x:rx,y:ry,z:rz,type:null});
     } else {
+      // Place block
       const normal=hit.face.normal;
       const nx=rx+Math.round(normal.x),ny=ry+Math.round(normal.y),nz=rz+Math.round(normal.z);
+      if(blockMap[`${nx},${ny},${nz}`])return;
+
       const def=getBlockDef(selectedBlock);
       const newBlock=new THREE.Mesh(new THREE.BoxGeometry(1,1,1),makeMaterials(def));
       newBlock.position.set(nx,ny,nz);
@@ -1068,6 +918,10 @@ document.addEventListener('mousedown',function(event){
       scene.add(newBlock);
       freeBlocks.push(newBlock);
       blockMap[`${nx},${ny},${nz}`]=true;
+
+      // Add raycast mesh for the new block
+      addRaycastBlock(nx,ny,nz,selectedBlock);
+
       socket.emit('blockChange',{x:nx,y:ny,z:nz,type:selectedBlock});
     }
   }
@@ -1086,8 +940,7 @@ document.getElementById('resumebtn').addEventListener('click',function(){documen
 
 document.addEventListener('mousemove',function(event){
   if(document.pointerLockElement!==renderer.domElement)return;
-  yaw-=event.movementX*0.002;
-  pitch-=event.movementY*0.002;
+  yaw-=event.movementX*0.002;pitch-=event.movementY*0.002;
   pitch=Math.max(-Math.PI/3,Math.min(Math.PI/3,pitch));
 });
 
@@ -1101,8 +954,13 @@ let mySocketId=null;
 
 socket.on('init',(data)=>{
   mySocketId=data.id;
-  for(const[key,type]of Object.entries(data.blockChanges)){const[x,y,z]=key.split(',').map(Number);applyBlockChange(x,y,z,type);}
-  for(const[id,pd]of Object.entries(data.players)){if(id!==mySocketId)createRemotePlayer(pd);}
+  for(const[key,type]of Object.entries(data.blockChanges)){
+    const[x,y,z]=key.split(',').map(Number);
+    applyBlockChange(x,y,z,type);
+  }
+  for(const[id,pd]of Object.entries(data.players)){
+    if(id!==mySocketId)createRemotePlayer(pd);
+  }
   socket.emit('setProfile',{username,rank:'Pup'});
   startGame();
 });
@@ -1118,7 +976,8 @@ function applyBlockChange(x,y,z,type){
   const key=`${x},${y},${z}`;
   if(type===null){
     delete blockMap[key];
-    for(const group of Object.values(loadedChunks)){const mesh=group.children.find(m=>Math.round(m.position.x)===x&&Math.round(m.position.y)===y&&Math.round(m.position.z)===z);if(mesh){group.remove(mesh);return;}}
+    const ri=raycastMeshes.findIndex(m=>Math.round(m.position.x)===x&&Math.round(m.position.y)===y&&Math.round(m.position.z)===z);
+    if(ri!==-1){scene.remove(raycastMeshes[ri]);raycastMeshes.splice(ri,1);}
     const fi=freeBlocks.findIndex(m=>Math.round(m.position.x)===x&&Math.round(m.position.y)===y&&Math.round(m.position.z)===z);
     if(fi!==-1){scene.remove(freeBlocks[fi]);freeBlocks.splice(fi,1);}
   } else {
@@ -1129,6 +988,7 @@ function applyBlockChange(x,y,z,type){
     scene.add(mesh);
     freeBlocks.push(mesh);
     blockMap[key]=true;
+    addRaycastBlock(x,y,z,type);
   }
 }
 
@@ -1143,14 +1003,37 @@ function sleep(ms){return new Promise(r=>setTimeout(r,ms));}
 async function startGame(){
   setLoading(10,'Generating spawn chunks...');
   await sleep(50);
-  for(let dx=-2;dx<=2;dx++)for(let dz=-2;dz<=2;dz++)generateChunk(dx,dz);
+
+  // Generate initial chunks
+  for(let dx=-2;dx<=2;dx++) for(let dz=-2;dz<=2;dz++) generateChunk(dx,dz);
+
+  // Add raycast meshes for all terrain blocks near spawn
+  setLoading(50,'Building collision data...');
+  await sleep(50);
+  for(let dx=-2;dx<=2;dx++) {
+    for(let dz=-2;dz<=2;dz++) {
+      const cx=dx,cz=dz;
+      for(let lx=0;lx<CHUNK_SIZE;lx++) {
+        for(let lz=0;lz<CHUNK_SIZE;lz++) {
+          const wx=cx*CHUNK_SIZE+lx;
+          const wz=cz*CHUNK_SIZE+lz;
+          const h=getHeightForBiome(wx,wz);
+          addRaycastBlock(wx,h,wz,getBiome(wx,wz).topBlock);
+          addRaycastBlock(wx,h-1,wz,'dirt');
+        }
+      }
+    }
+  }
+
   setLoading(80,'Finding spawn point...');
   await sleep(50);
   const spawnY=Math.max(getHeightForBiome(8,8),WATER_LEVEL)+3;
   player.position.set(8,spawnY,8);
+
   buildHotbar();
   buildInventory();
   document.getElementById('hotbar').style.display='flex';
+
   setLoading(100,'Ready!');
   await sleep(300);
   document.getElementById('loading-screen').style.display='none';
@@ -1203,8 +1086,7 @@ function animate(){
 
   for(const rp of Object.values(remotePlayers))rp.group.children.forEach(c=>{if(c.userData.isLabel)c.lookAt(camera.position);});
 
-  timeOfDay+=0.0000556;
-  if(timeOfDay>1)timeOfDay=0;
+  timeOfDay+=0.0000556;if(timeOfDay>1)timeOfDay=0;
   const sunAngle=timeOfDay*Math.PI*2;
   sunLight.position.set(Math.cos(sunAngle)*50,Math.sin(sunAngle)*50,20);
   const intensity=Math.max(0,Math.sin(sunAngle));
@@ -1213,11 +1095,10 @@ function animate(){
   const cb=getBiome(player.position.x,player.position.z);
   const nc=new THREE.Color(0x0a0a2a);
   const ts=inWater?new THREE.Color(0x0a2255):cb.skyColor.clone().lerp(nc,1-intensity);
-  scene.background=ts;
-  scene.fog.color.copy(ts);
+  scene.background=ts;scene.fog.color.copy(ts);
   scene.fog.far=inWater?15:60;
-
   document.getElementById('biome-indicator').textContent=inWater?'Ocean':cb.name;
+
   player.rotation.y+=(moveYaw-player.rotation.y)*0.15;
 
   if(isFirstPerson){
@@ -1231,7 +1112,11 @@ function animate(){
       if(blockMap[`${Math.round(tx)},${Math.round(player.position.y+2)},${Math.round(tz)}`])break;
       safeDist=d;
     }
-    camera.position.set(player.position.x-Math.sin(yaw)*safeDist,Math.max(player.position.y+0.5,player.position.y+2+pitch*3),player.position.z-Math.cos(yaw)*safeDist);
+    camera.position.set(
+      player.position.x-Math.sin(yaw)*safeDist,
+      Math.max(player.position.y+0.5,player.position.y+2+pitch*3),
+      player.position.z-Math.cos(yaw)*safeDist
+    );
     camera.rotation.order='YXZ';camera.rotation.y=yaw;camera.rotation.x=0;
     camera.lookAt(player.position);
   }
