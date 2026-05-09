@@ -227,6 +227,63 @@
       position: fixed; top: 50px; left: 10px; color: white; font-family: monospace;
       font-size: 12px; background: rgba(0,0,0,0.4); padding: 6px 10px; border-radius: 4px; pointer-events: none;
     }
+
+    #mobile-controls {
+  position: fixed;
+  bottom: 0; left: 0;
+  width: 100%; height: 200px;
+  pointer-events: none;
+  z-index: 60;
+}
+
+#joystick-zone {
+  position: absolute;
+  bottom: 20px; left: 20px;
+  width: 120px; height: 120px;
+  pointer-events: all;
+}
+
+#joystick-base {
+  width: 120px; height: 120px;
+  background: rgba(255,255,255,0.15);
+  border: 2px solid rgba(255,255,255,0.3);
+  border-radius: 50%;
+  position: relative;
+}
+
+#joystick-thumb {
+  width: 50px; height: 50px;
+  background: rgba(255,255,255,0.5);
+  border-radius: 50%;
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%,-50%);
+  transition: transform 0.05s;
+}
+
+#mobile-buttons {
+  position: absolute;
+  bottom: 20px; right: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  pointer-events: all;
+}
+
+#mobile-buttons button {
+  width: 64px; height: 64px;
+  border-radius: 50%;
+  border: 2px solid rgba(255,255,255,0.3);
+  background: rgba(0,0,0,0.5);
+  color: white;
+  font-size: 24px;
+  cursor: pointer;
+}
+
+#btn-jump { background: rgba(68,170,68,0.5); }
+#btn-break { background: rgba(200,50,50,0.5); }
+#btn-place { background: rgba(50,100,200,0.5); }
+
   </style>
 </head>
 <body>
@@ -277,6 +334,21 @@
 </div>
 
 <div id="debug"></div>
+
+<!-- Mobile Controls -->
+<div id="mobile-controls" style="display:none">
+  <div id="joystick-zone">
+    <div id="joystick-base">
+      <div id="joystick-thumb"></div>
+    </div>
+  </div>
+  <div id="mobile-buttons">
+    <button id="btn-jump">↑</button>
+    <button id="btn-break">⛏</button>
+    <button id="btn-place">🧱</button>
+  </div>
+</div>
+
 
 <script src="/socket.io/socket.io.js"></script>
 <script>
@@ -1127,6 +1199,156 @@ function animate(){
 }
 
 animate();
+
+// ============================================================
+// MOBILE CONTROLS
+// ============================================================
+function isMobile() {
+  return /Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || window.innerWidth < 900;
+}
+
+if (isMobile()) {
+  document.getElementById('mobile-controls').style.display = 'block';
+
+  const thumb = document.getElementById('joystick-thumb');
+  const base  = document.getElementById('joystick-base');
+  let joystickActive = false;
+  let joystickX = 0;
+  let joystickY = 0;
+
+  base.addEventListener('touchstart', function(e) {
+    e.preventDefault();
+    joystickActive = true;
+  }, {passive: false});
+
+  base.addEventListener('touchmove', function(e) {
+    e.preventDefault();
+    if (!joystickActive) return;
+    const touch = e.touches[0];
+    const rect  = base.getBoundingClientRect();
+    const cx    = rect.left + rect.width  / 2;
+    const cy    = rect.top  + rect.height / 2;
+    let dx = touch.clientX - cx;
+    let dy = touch.clientY - cy;
+    const dist = Math.sqrt(dx*dx + dy*dy);
+    const maxDist = 35;
+    if (dist > maxDist) { dx = dx/dist*maxDist; dy = dy/dist*maxDist; }
+    joystickX = dx / maxDist;
+    joystickY = dy / maxDist;
+    thumb.style.transform = `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px))`;
+  }, {passive: false});
+
+  base.addEventListener('touchend', function() {
+    joystickActive = false;
+    joystickX = 0;
+    joystickY = 0;
+    thumb.style.transform = 'translate(-50%,-50%)';
+  });
+
+  // Jump button
+  document.getElementById('btn-jump').addEventListener('touchstart', function(e) {
+    e.preventDefault();
+    if (isOnGround && !inWater) { velocityY = 0.15; isOnGround = false; }
+    if (inWater) velocityY = 0.08;
+  }, {passive: false});
+
+  // Break button
+  document.getElementById('btn-break').addEventListener('touchstart', function(e) {
+    e.preventDefault();
+    mouse.x = 0; mouse.y = 0;
+    raycaster.setFromCamera(mouse, camera);
+    const targets = [...raycastMeshes, ...freeBlocks];
+    const intersects = raycaster.intersectObjects(targets);
+    if (intersects.length > 0) {
+      const hit = intersects[0];
+      const rx = Math.round(hit.object.position.x);
+      const ry = Math.round(hit.object.position.y);
+      const rz = Math.round(hit.object.position.z);
+      delete blockMap[`${rx},${ry},${rz}`];
+      const ri = raycastMeshes.findIndex(m=>Math.round(m.position.x)===rx&&Math.round(m.position.y)===ry&&Math.round(m.position.z)===rz);
+      if (ri!==-1){scene.remove(raycastMeshes[ri]);raycastMeshes.splice(ri,1);}
+      const fi = freeBlocks.findIndex(m=>Math.round(m.position.x)===rx&&Math.round(m.position.y)===ry&&Math.round(m.position.z)===rz);
+      if (fi!==-1){scene.remove(freeBlocks[fi]);freeBlocks.splice(fi,1);}
+      socket.emit('blockChange',{x:rx,y:ry,z:rz,type:null});
+    }
+  }, {passive: false});
+
+  // Place button
+  document.getElementById('btn-place').addEventListener('touchstart', function(e) {
+    e.preventDefault();
+    mouse.x = 0; mouse.y = 0;
+    raycaster.setFromCamera(mouse, camera);
+    const targets = [...raycastMeshes, ...freeBlocks];
+    const intersects = raycaster.intersectObjects(targets);
+    if (intersects.length > 0) {
+      const hit = intersects[0];
+      const normal = hit.face.normal;
+      const nx = Math.round(hit.object.position.x)+Math.round(normal.x);
+      const ny = Math.round(hit.object.position.y)+Math.round(normal.y);
+      const nz = Math.round(hit.object.position.z)+Math.round(normal.z);
+      if (blockMap[`${nx},${ny},${nz}`]) return;
+      const def = getBlockDef(selectedBlock);
+      const newBlock = new THREE.Mesh(new THREE.BoxGeometry(1,1,1),makeMaterials(def));
+      newBlock.position.set(nx,ny,nz);
+      scene.add(newBlock);
+      freeBlocks.push(newBlock);
+      blockMap[`${nx},${ny},${nz}`] = true;
+      addRaycastBlock(nx,ny,nz,selectedBlock);
+      socket.emit('blockChange',{x:nx,y:ny,z:nz,type:selectedBlock});
+    }
+  }, {passive: false});
+
+  // Camera look with touch on the right side of screen
+  let lookTouch = null;
+  let lastLookX = 0;
+  let lastLookY = 0;
+
+  renderer.domElement.addEventListener('touchstart', function(e) {
+    for (const touch of e.changedTouches) {
+      if (touch.clientX > window.innerWidth * 0.4) {
+        lookTouch = touch.identifier;
+        lastLookX = touch.clientX;
+        lastLookY = touch.clientY;
+      }
+    }
+  }, {passive: true});
+
+  renderer.domElement.addEventListener('touchmove', function(e) {
+    for (const touch of e.changedTouches) {
+      if (touch.identifier === lookTouch) {
+        const dx = touch.clientX - lastLookX;
+        const dy = touch.clientY - lastLookY;
+        yaw   -= dx * 0.004;
+        pitch -= dy * 0.004;
+        pitch = Math.max(-Math.PI/3, Math.min(Math.PI/3, pitch));
+        lastLookX = touch.clientX;
+        lastLookY = touch.clientY;
+      }
+    }
+  }, {passive: true});
+
+  renderer.domElement.addEventListener('touchend', function(e) {
+    for (const touch of e.changedTouches) {
+      if (touch.identifier === lookTouch) lookTouch = null;
+    }
+  }, {passive: true});
+
+  // Hook joystick into game loop
+  const origAnimate = animate;
+  function mobileAnimate() {
+    if (joystickActive) {
+      const speed = inWater ? 0.05 : 0.1;
+      const moveYaw = isFirstPerson ? yaw + Math.PI : yaw;
+      const nx = player.position.x + (Math.sin(moveYaw)*joystickY + Math.cos(moveYaw)*joystickX) * speed;
+      const nz = player.position.z + (Math.cos(moveYaw)*joystickY - Math.sin(moveYaw)*joystickX) * speed;
+      if (!collidesAt(nx, player.position.y, player.position.z)) player.position.x = nx;
+      if (!collidesAt(player.position.x, player.position.y, nz)) player.position.z = nz;
+    }
+    requestAnimationFrame(mobileAnimate);
+  }
+  mobileAnimate();
+}
+
 
 window.addEventListener('resize',function(){
   camera.aspect=window.innerWidth/window.innerHeight;
