@@ -759,7 +759,10 @@ let isOnGround=true,velocityY=0,jumpPressed=false;
 let isFirstPerson=false,timeOfDay=0,chatOpen=false,inWater=false;
 const PLAYER_RADIUS=0.3;
 
-function isMobile(){return /Android|iPhone|iPad|iPod/i.test(navigator.userAgent)||window.innerWidth<900;}
+function isMobile(){
+  return ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
+}
+
 
 function isSolid(x,y,z){return!!blockMap[`${Math.round(x)},${Math.round(y)},${Math.round(z)}`];}
 
