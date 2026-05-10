@@ -589,7 +589,7 @@ function generateChunk(cx,cz){
     if(!merged)return;
     // Use all texture first so leaves/wood/cactus show correctly on all faces
     const t=def.textures;
-    const texName=t.all||t.side||t.top;
+    const texName=blockId==='grass'?t.side:(t.all||t.side||t.top);
     let mat;
     if(texName&&loadedTextures[texName])mat=new THREE.MeshLambertMaterial({map:loadedTextures[texName]});
     else mat=new THREE.MeshLambertMaterial({color:def.fallbackColor});
