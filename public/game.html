@@ -51,48 +51,28 @@
     .slot-number { position: absolute; top: 3px; left: 5px; font-size: 9px; color: rgba(255,255,255,0.5); font-family: Arial, sans-serif; font-weight: bold; }
 
     .slot-tooltip {
-      position: absolute;
-      bottom: 64px; left: 50%;
+      position: absolute; bottom: 64px; left: 50%;
       transform: translateX(-50%);
-      background: rgba(0,0,0,0.9);
-      color: white;
-      font-family: Arial, sans-serif;
-      font-size: 11px;
-      padding: 4px 8px;
-      border-radius: 4px;
-      white-space: nowrap;
-      pointer-events: none;
-      display: none;
-      z-index: 200;
+      background: rgba(0,0,0,0.9); color: white;
+      font-family: Arial, sans-serif; font-size: 11px;
+      padding: 4px 8px; border-radius: 4px;
+      white-space: nowrap; pointer-events: none; display: none; z-index: 200;
     }
-
     .slot:hover .slot-tooltip { display: block; }
 
     #inventory {
       position: fixed; top: 0; left: 0;
       width: 100%; height: 100%;
-      display: none;
-      align-items: center;
-      justify-content: center;
-      z-index: 100;
+      display: none; align-items: center; justify-content: center; z-index: 100;
     }
-
-    #inventory.open {
-      display: flex;
-      background: rgba(0,0,10,0.75);
-      backdrop-filter: blur(4px);
-    }
+    #inventory.open { display: flex; background: rgba(0,0,10,0.75); backdrop-filter: blur(4px); }
 
     #inventory-panel {
       background: rgba(10,10,25,0.95);
       border: 1px solid rgba(255,255,255,0.12);
-      border-radius: 16px;
-      padding: 24px;
-      width: 90%;
-      max-width: 580px;
-      max-height: 80vh;
-      overflow-y: auto;
-      animation: invSlideIn 0.2s ease;
+      border-radius: 16px; padding: 24px;
+      width: 90%; max-width: 580px; max-height: 80vh;
+      overflow-y: auto; animation: invSlideIn 0.2s ease;
     }
 
     @keyframes invSlideIn {
@@ -122,7 +102,6 @@
       cursor: pointer; transition: all 0.15s;
       padding: 8px; gap: 4px;
     }
-
     .inv-slot:hover { background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.25); transform: scale(1.05); }
     .inv-slot.selected { border-color: #44aa44; background: rgba(68,170,68,0.12); box-shadow: 0 0 8px rgba(68,170,68,0.3); }
     .inv-icon { width: 40px; height: 40px; image-rendering: pixelated; object-fit: cover; border-radius: 4px; }
@@ -132,16 +111,13 @@
       position: fixed; top: 0; left: 0; width: 100%; height: 100%;
       background: rgba(0,0,0,0.6); align-items: center; justify-content: center;
     }
-
     #pausebox { background: #111122; padding: 40px; text-align: center; border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; }
     #pausebox h2 { color: white; font-family: Arial Black, sans-serif; margin-bottom: 20px; letter-spacing: 2px; }
-
     #resumebtn {
       background: #44aa44; color: white; border: none; padding: 12px 24px;
       font-size: 16px; cursor: pointer; font-family: Arial Black, sans-serif;
       border-radius: 6px; margin-bottom: 12px; display: block; width: 100%; letter-spacing: 1px;
     }
-
     #quitbtn-ingame {
       background: transparent; color: #ff6666; border: 1px solid rgba(255,100,100,0.3);
       padding: 12px 24px; font-size: 14px; cursor: pointer;
@@ -152,7 +128,6 @@
       position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%);
       width: 20px; height: 20px; pointer-events: none; display: none;
     }
-
     #crosshair::before, #crosshair::after { content: ''; position: absolute; background: white; opacity: 0.8; }
     #crosshair::before { width: 2px; height: 100%; left: 50%; transform: translateX(-50%); }
     #crosshair::after { width: 100%; height: 2px; top: 50%; transform: translateY(-50%); }
@@ -162,19 +137,16 @@
       color: white; font-family: Arial, sans-serif; font-size: 13px;
       background: rgba(0,0,0,0.4); padding: 4px 12px; border-radius: 20px; letter-spacing: 1px;
     }
-
     #biome-indicator {
       position: fixed; top: 48px; left: 50%; transform: translateX(-50%);
       color: rgba(255,255,255,0.6); font-family: Arial, sans-serif; font-size: 11px;
       letter-spacing: 2px; text-transform: uppercase; pointer-events: none;
     }
-
     #player-count {
       position: fixed; top: 16px; right: 16px; color: white;
       font-family: Arial, sans-serif; font-size: 12px;
       background: rgba(0,0,0,0.4); padding: 4px 12px; border-radius: 20px;
     }
-
     #underwater-overlay {
       position: fixed; top: 0; left: 0; width: 100%; height: 100%;
       background: rgba(0,50,150,0.35); pointer-events: none; display: none; z-index: 5;
@@ -182,23 +154,19 @@
 
     #chat-box { position: fixed; bottom: 100px; left: 16px; width: 320px; z-index: 50; }
     #chat-messages { display: flex; flex-direction: column; gap: 3px; margin-bottom: 6px; max-height: 160px; overflow: hidden; }
-
     .chat-msg {
       font-family: Arial, sans-serif; font-size: 13px; color: white;
       background: rgba(0,0,0,0.45); padding: 3px 8px; border-radius: 4px;
       width: fit-content; max-width: 100%; word-break: break-word;
     }
-
     .chat-msg .chat-name { font-weight: bold; margin-right: 4px; }
     #chat-input-row { display: none; gap: 6px; }
     #chat-input-row.active { display: flex; }
-
     #chat-input {
       flex: 1; padding: 7px 10px; background: rgba(0,0,0,0.7);
       border: 1px solid rgba(255,255,255,0.2); border-radius: 4px;
       color: white; font-size: 13px; outline: none;
     }
-
     #chat-send {
       padding: 7px 14px; background: #44aa44; border: none; border-radius: 4px;
       color: white; font-family: Arial Black, sans-serif; font-size: 12px; cursor: pointer;
@@ -209,7 +177,6 @@
       background: #0d0d1a; display: flex; flex-direction: column;
       align-items: center; justify-content: center; z-index: 999;
     }
-
     #loading-title { font-family: Arial Black, sans-serif; font-size: 48px; color: white; letter-spacing: 4px; margin-bottom: 24px; text-shadow: 3px 3px 0 #000; }
     #loading-bar-bg { width: 300px; height: 6px; background: rgba(255,255,255,0.1); border-radius: 3px; overflow: hidden; margin-bottom: 12px; }
     #loading-bar-fill { height: 100%; background: #44aa44; border-radius: 3px; width: 0%; transition: width 0.1s; }
@@ -220,26 +187,22 @@
       font-size: 12px; background: rgba(0,0,0,0.4); padding: 6px 10px; border-radius: 4px; pointer-events: none;
     }
 
-    /* ===================== MOBILE CONTROLS ===================== */
+    /* MOBILE CONTROLS */
     #mobile-controls {
       position: fixed; bottom: 0; left: 0;
       width: 100%; height: 220px;
-      pointer-events: none; z-index: 60;
-      display: none;
+      pointer-events: none; z-index: 60; display: none;
     }
-
     #joystick-zone {
       position: absolute; bottom: 20px; left: 20px;
       width: 130px; height: 130px; pointer-events: all;
     }
-
     #joystick-base {
       width: 130px; height: 130px;
       background: rgba(255,255,255,0.12);
       border: 2px solid rgba(255,255,255,0.3);
       border-radius: 50%; position: relative;
     }
-
     #joystick-thumb {
       width: 54px; height: 54px;
       background: rgba(255,255,255,0.5);
@@ -247,12 +210,10 @@
       top: 50%; left: 50%;
       transform: translate(-50%,-50%);
     }
-
     #mobile-buttons {
       position: absolute; bottom: 20px; right: 20px;
       display: flex; flex-direction: column; gap: 10px; pointer-events: all;
     }
-
     #mobile-buttons button {
       width: 68px; height: 68px;
       border-radius: 50%;
@@ -260,10 +221,10 @@
       color: white; font-size: 26px; cursor: pointer;
       -webkit-tap-highlight-color: transparent;
     }
-
     #btn-jump  { background: rgba(68,170,68,0.6);  }
     #btn-break { background: rgba(200,50,50,0.6);  }
     #btn-place { background: rgba(50,100,200,0.6); }
+    #btn-exit  { background: rgba(255,100,100,0.6); }
 
     #mobile-inv-btn {
       position: fixed; top: 80px; right: 16px;
@@ -326,7 +287,6 @@
 
 <div id="debug"></div>
 
-<!-- Mobile Controls -->
 <div id="mobile-controls">
   <div id="joystick-zone">
     <div id="joystick-base">
@@ -337,6 +297,7 @@
     <button id="btn-jump">↑</button>
     <button id="btn-break">⛏</button>
     <button id="btn-place">🧱</button>
+    <button id="btn-exit">🚪</button>
   </div>
 </div>
 
@@ -369,8 +330,8 @@ function getFallbackStyle(def){ return `background:#${def.fallbackColor.toString
 // ============================================================
 // TEXTURE SYSTEM
 // ============================================================
-const loadedTextures = {};
-const textureLoader  = new THREE.TextureLoader();
+const loadedTextures={};
+const textureLoader=new THREE.TextureLoader();
 
 function loadBlockTexture(name){
   if(loadedTextures[name])return loadedTextures[name];
@@ -553,7 +514,7 @@ function getBiome(x,z){
 function getHeightForBiome(x,z){return Math.floor(getHeightRaw(x,z)*getBiome(x,z).heightMult);}
 
 // ============================================================
-// CHUNK SYSTEM — MERGED MESHES
+// CHUNK SYSTEM
 // ============================================================
 const WATER_LEVEL=0;
 const CHUNK_SIZE=16;
@@ -568,7 +529,7 @@ function chunkKey(cx,cz){return`${cx},${cz}`;}
 
 function addRaycastBlock(x,y,z,blockId){
   const mesh=new THREE.Mesh(new THREE.BoxGeometry(1,1,1),new THREE.MeshBasicMaterial({visible:false}));
-  mesh.position.set(x,y,z);mesh.userData.blockId=blockId;mesh.userData.isRaycast=true;
+  mesh.position.set(x,y,z);mesh.userData.blockId=blockId;
   scene.add(mesh);raycastMeshes.push(mesh);
 }
 
@@ -626,7 +587,9 @@ function generateChunk(cx,cz){
     const geometries=blocks.map(b=>{const g=geo.clone();g.translate(b.x,b.y,b.z);return g;});
     const merged=THREE.BufferGeometryUtils.mergeBufferGeometries(geometries,false);
     if(!merged)return;
-    const t=def.textures;const texName=t.top||t.all;
+    // Use all texture first so leaves/wood/cactus show correctly on all faces
+    const t=def.textures;
+    const texName=t.all||t.side||t.top;
     let mat;
     if(texName&&loadedTextures[texName])mat=new THREE.MeshLambertMaterial({map:loadedTextures[texName]});
     else mat=new THREE.MeshLambertMaterial({color:def.fallbackColor});
@@ -759,10 +722,7 @@ let isOnGround=true,velocityY=0,jumpPressed=false;
 let isFirstPerson=false,timeOfDay=0,chatOpen=false,inWater=false;
 const PLAYER_RADIUS=0.3;
 
-function isMobile(){
-  return ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
-}
-
+function isMobile(){ return('ontouchstart'in window)||navigator.maxTouchPoints>0; }
 
 function isSolid(x,y,z){return!!blockMap[`${Math.round(x)},${Math.round(y)},${Math.round(z)}`];}
 
@@ -780,7 +740,8 @@ function collidesAt(x,y,z){
 document.addEventListener('keydown',function(event){
   if(chatOpen){if(event.key==='Escape')closeChat();return;}
   keys[event.key]=true;
-  if(event.key===' '){if(inWater)velocityY=0.08;}
+  if(event.key===' '&&isOnGround&&!inWater){velocityY=0.15;isOnGround=false;}
+  if(event.key===' '&&inWater)velocityY=0.08;
   if(event.key==='1')switchSlot(0);if(event.key==='2')switchSlot(1);
   if(event.key==='3')switchSlot(2);if(event.key==='4')switchSlot(3);
   if(event.key==='5')switchSlot(4);if(event.key==='6')switchSlot(5);
@@ -796,7 +757,7 @@ document.addEventListener('keydown',function(event){
   if(event.key==='t'||event.key==='T')openChat();
 });
 
-document.addEventListener('keyup',function(event){keys[event.key]=false;if(event.key===' ')jumpPressed=false;});
+document.addEventListener('keyup',function(event){keys[event.key]=false;});
 
 document.addEventListener('wheel',function(event){
   if(document.pointerLockElement!==renderer.domElement)return;
@@ -814,7 +775,7 @@ document.getElementById('chat-input').addEventListener('keydown',function(e){if(
 function addChatMessage(u,m){const box=document.getElementById('chat-messages');const div=document.createElement('div');div.className='chat-msg';div.innerHTML=`<span class="chat-name">${u}:</span>${m}`;box.appendChild(div);while(box.children.length>8)box.removeChild(box.firstChild);setTimeout(()=>{if(div.parentNode)div.remove();},8000);}
 
 // ============================================================
-// RAYCASTER
+// RAYCASTER + BLOCK INTERACTION
 // ============================================================
 const raycaster=new THREE.Raycaster();
 raycaster.far=8;
@@ -906,7 +867,6 @@ document.addEventListener('pointerlockchange',function(){
 
 document.getElementById('resumebtn').addEventListener('click',function(){document.getElementById('pausemenu').style.display='none';if(!isMobile())renderer.domElement.requestPointerLock();});
 document.addEventListener('contextmenu',function(e){e.preventDefault();});
-
 document.addEventListener('mousemove',function(event){
   if(document.pointerLockElement!==renderer.domElement)return;
   yaw-=event.movementX*0.002;pitch-=event.movementY*0.002;
@@ -1000,70 +960,73 @@ async function startGame(){
 // ============================================================
 let joystickX=0,joystickY=0,joystickActive=false;
 
-if(true){
-  const thumb=document.getElementById('joystick-thumb');
-  const base=document.getElementById('joystick-base');
+const thumb=document.getElementById('joystick-thumb');
+const base=document.getElementById('joystick-base');
 
-  base.addEventListener('touchstart',function(e){e.preventDefault();joystickActive=true;},{passive:false});
+base.addEventListener('touchstart',function(e){e.preventDefault();joystickActive=true;},{passive:false});
 
-  base.addEventListener('touchmove',function(e){
-    e.preventDefault();if(!joystickActive)return;
-    const touch=e.touches[0];
-    const rect=base.getBoundingClientRect();
-    const cx=rect.left+rect.width/2,cy=rect.top+rect.height/2;
-    let dx=touch.clientX-cx,dy=touch.clientY-cy;
-    const dist=Math.sqrt(dx*dx+dy*dy),maxDist=40;
-    if(dist>maxDist){dx=dx/dist*maxDist;dy=dy/dist*maxDist;}
-    joystickX=dx/maxDist;joystickY=dy/maxDist;
-    thumb.style.transform=`translate(calc(-50% + ${dx}px),calc(-50% + ${dy}px))`;
-  },{passive:false});
+base.addEventListener('touchmove',function(e){
+  e.preventDefault();if(!joystickActive)return;
+  const touch=e.touches[0];
+  const rect=base.getBoundingClientRect();
+  const cx=rect.left+rect.width/2,cy=rect.top+rect.height/2;
+  let dx=touch.clientX-cx,dy=touch.clientY-cy;
+  const dist=Math.sqrt(dx*dx+dy*dy),maxDist=40;
+  if(dist>maxDist){dx=dx/dist*maxDist;dy=dy/dist*maxDist;}
+  joystickX=dx/maxDist;joystickY=dy/maxDist;
+  thumb.style.transform=`translate(calc(-50% + ${dx}px),calc(-50% + ${dy}px))`;
+},{passive:false});
 
-  base.addEventListener('touchend',function(){
-    joystickActive=false;joystickX=0;joystickY=0;
-    thumb.style.transform='translate(-50%,-50%)';
-  });
+base.addEventListener('touchend',function(){
+  joystickActive=false;joystickX=0;joystickY=0;
+  thumb.style.transform='translate(-50%,-50%)';
+});
 
-  document.getElementById('btn-jump').addEventListener('touchstart',function(e){
-    e.preventDefault();
-    if(isOnGround&&!inWater){velocityY=0.15;isOnGround=false;}
-    if(inWater)velocityY=0.08;
-  },{passive:false});
+document.getElementById('btn-jump').addEventListener('touchstart',function(e){
+  e.preventDefault();
+  if(isOnGround&&!inWater){velocityY=0.15;isOnGround=false;}
+  if(inWater)velocityY=0.08;
+},{passive:false});
 
-  document.getElementById('btn-break').addEventListener('touchstart',function(e){e.preventDefault();doBreak();},{passive:false});
-  document.getElementById('btn-place').addEventListener('touchstart',function(e){e.preventDefault();doPlace();},{passive:false});
+document.getElementById('btn-break').addEventListener('touchstart',function(e){e.preventDefault();doBreak();},{passive:false});
+document.getElementById('btn-place').addEventListener('touchstart',function(e){e.preventDefault();doPlace();},{passive:false});
 
-  document.getElementById('mobile-inv-btn').addEventListener('touchstart',function(e){
-    e.preventDefault();
-    const inv=document.getElementById('inventory');
-    if(inv.classList.contains('open'))closeInventory();else openInventory();
-  },{passive:false});
+document.getElementById('btn-exit').addEventListener('touchstart',function(e){
+  e.preventDefault();
+  window.location.href='lobby.html';
+},{passive:false});
 
-  // Camera look — right side of screen
-  let lookTouch=null,lastLookX=0,lastLookY=0;
+document.getElementById('mobile-inv-btn').addEventListener('touchstart',function(e){
+  e.preventDefault();
+  const inv=document.getElementById('inventory');
+  if(inv.classList.contains('open'))closeInventory();else openInventory();
+},{passive:false});
 
-  renderer.domElement.addEventListener('touchstart',function(e){
-    for(const touch of e.changedTouches){
-      if(touch.clientX>window.innerWidth*0.35&&!document.getElementById('inventory').classList.contains('open')){
-        lookTouch=touch.identifier;lastLookX=touch.clientX;lastLookY=touch.clientY;
-      }
+// Camera look — right side of screen
+let lookTouch=null,lastLookX=0,lastLookY=0;
+
+renderer.domElement.addEventListener('touchstart',function(e){
+  for(const touch of e.changedTouches){
+    if(touch.clientX>window.innerWidth*0.35&&!document.getElementById('inventory').classList.contains('open')){
+      lookTouch=touch.identifier;lastLookX=touch.clientX;lastLookY=touch.clientY;
     }
-  },{passive:true});
+  }
+},{passive:true});
 
-  renderer.domElement.addEventListener('touchmove',function(e){
-    for(const touch of e.changedTouches){
-      if(touch.identifier===lookTouch){
-        yaw-=(touch.clientX-lastLookX)*0.004;
-        pitch-=(touch.clientY-lastLookY)*0.004;
-        pitch=Math.max(-Math.PI/3,Math.min(Math.PI/3,pitch));
-        lastLookX=touch.clientX;lastLookY=touch.clientY;
-      }
+renderer.domElement.addEventListener('touchmove',function(e){
+  for(const touch of e.changedTouches){
+    if(touch.identifier===lookTouch){
+      yaw-=(touch.clientX-lastLookX)*0.004;
+      pitch-=(touch.clientY-lastLookY)*0.004;
+      pitch=Math.max(-Math.PI/3,Math.min(Math.PI/3,pitch));
+      lastLookX=touch.clientX;lastLookY=touch.clientY;
     }
-  },{passive:true});
+  }
+},{passive:true});
 
-  renderer.domElement.addEventListener('touchend',function(e){
-    for(const touch of e.changedTouches){if(touch.identifier===lookTouch)lookTouch=null;}
-  },{passive:true});
-}
+renderer.domElement.addEventListener('touchend',function(e){
+  for(const touch of e.changedTouches){if(touch.identifier===lookTouch)lookTouch=null;}
+},{passive:true});
 
 // ============================================================
 // GAME LOOP
@@ -1079,7 +1042,6 @@ function animate(){
   const speed=inWater?0.05:0.1;
   const moveYaw=isFirstPerson?yaw+Math.PI:yaw;
 
-  // Keyboard movement
   if(!chatOpen){
     if(keys['w']){const nx=player.position.x+Math.sin(moveYaw)*speed;const nz=player.position.z+Math.cos(moveYaw)*speed;if(!collidesAt(nx,player.position.y,player.position.z))player.position.x=nx;if(!collidesAt(player.position.x,player.position.y,nz))player.position.z=nz;}
     if(keys['s']){const nx=player.position.x-Math.sin(moveYaw)*speed;const nz=player.position.z-Math.cos(moveYaw)*speed;if(!collidesAt(nx,player.position.y,player.position.z))player.position.x=nx;if(!collidesAt(player.position.x,player.position.y,nz))player.position.z=nz;}
@@ -1104,7 +1066,6 @@ function animate(){
   const newY=player.position.y+velocityY;
   if(velocityY<0&&collidesAt(player.position.x,newY,player.position.z)){
     velocityY=0;isOnGround=true;
-    if(keys[' ']&&!inWater){velocityY=0.15;isOnGround=false;}
   } else if(velocityY>0&&collidesAt(player.position.x,newY+1,player.position.z)){
     velocityY=0;isOnGround=false;
   } else {
@@ -1150,7 +1111,7 @@ function animate(){
     camera.lookAt(player.position);
   }
 
-  document.getElementById('debug').textContent=`Pos: ${Math.round(player.position.x)}, ${Math.round(player.position.y)}, ${Math.round(player.position.z)}\nMobile: ${isMobile()}\nUA: ${navigator.userAgent.substring(0,50)}`;
+  document.getElementById('debug').textContent=`Pos: ${Math.round(player.position.x)}, ${Math.round(player.position.y)}, ${Math.round(player.position.z)} | Chunks: ${Object.keys(loadedChunks).length}`;
 
   renderer.render(scene,camera);
 }
