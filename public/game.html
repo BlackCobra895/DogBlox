@@ -236,6 +236,7 @@
   cursor: pointer; z-index: 60; pointer-events: all;
   -webkit-tap-highlight-color: transparent;
 }
+```
 
   </style>
 </head>
@@ -566,11 +567,53 @@ const raycastMeshes  = [];
 function worldToChunk(x, z) { return { cx: Math.floor(x / CHUNK_SIZE), cz: Math.floor(z / CHUNK_SIZE) }; }
 function chunkKey(cx, cz)   { return `${cx},${cz}`; }
 
-function addRaycastBlock(x, y, z, blockId) {
-  const mesh = new THREE.Mesh(new THREE.BoxGeometry(1,1,1), new THREE.MeshBasicMaterial({ visible: false }));
-  mesh.position.set(x, y, z); mesh.userData.blockId = blockId;
-  scene.add(mesh); raycastMeshes.push(mesh);
+// ============================================================
+// DDA VOXEL RAYCAST — replaces all invisible-box raycasting
+// Returns { x, y, z, nx, ny, nz } or null
+// nx/ny/nz = face normal of hit face (for placement)
+// ============================================================
+function voxelRaycast(maxDist = 8) {
+  const dir = new THREE.Vector3();
+  camera.getWorldDirection(dir);
+  const pos = camera.position.clone();
+
+  let x = Math.floor(pos.x);
+  let y = Math.floor(pos.y);
+  let z = Math.floor(pos.z);
+
+  const stepX = dir.x >= 0 ? 1 : -1;
+  const stepY = dir.y >= 0 ? 1 : -1;
+  const stepZ = dir.z >= 0 ? 1 : -1;
+
+  const tDeltaX = Math.abs(1 / dir.x);
+  const tDeltaY = Math.abs(1 / dir.y);
+  const tDeltaZ = Math.abs(1 / dir.z);
+
+  let tMaxX = dir.x === 0 ? Infinity : (stepX > 0 ? Math.ceil(pos.x) - pos.x : pos.x - Math.floor(pos.x)) / Math.abs(dir.x);
+  let tMaxY = dir.y === 0 ? Infinity : (stepY > 0 ? Math.ceil(pos.y) - pos.y : pos.y - Math.floor(pos.y)) / Math.abs(dir.y);
+  let tMaxZ = dir.z === 0 ? Infinity : (stepZ > 0 ? Math.ceil(pos.z) - pos.z : pos.z - Math.floor(pos.z)) / Math.abs(dir.z);
+
+  let lastX = x, lastY = y, lastZ = z;
+  let dist = 0;
+
+  while (dist < maxDist) {
+    if (blockMap[`${x},${y},${z}`]) {
+      return { x, y, z, nx: lastX - x, ny: lastY - y, nz: lastZ - z };
+    }
+    lastX = x; lastY = y; lastZ = z;
+    if (tMaxX < tMaxY && tMaxX < tMaxZ) {
+      dist = tMaxX; tMaxX += tDeltaX; x += stepX;
+    } else if (tMaxY < tMaxZ) {
+      dist = tMaxY; tMaxY += tDeltaY; y += stepY;
+    } else {
+      dist = tMaxZ; tMaxZ += tDeltaZ; z += stepZ;
+    }
+  }
+  return null;
 }
+
+// No-op — DDA reads blockMap directly, no invisible meshes needed
+function addRaycastBlock(x, y, z, blockId) {}
 
 // ============================================================
 // FACE BUILDER — pushes one quad into flat arrays
@@ -918,45 +961,87 @@ const raycaster = new THREE.Raycaster();
 raycaster.far = 8;
 const mouse = new THREE.Vector2();
 
-function doBreak() {
-  mouse.x = 0; mouse.y = 0;
-  raycaster.setFromCamera(mouse, camera);
-  const targets = [...raycastMeshes, ...freeBlocks];
-  const intersects = raycaster.intersectObjects(targets);
-  if (intersects.length > 0) {
-    const hit = intersects[0];
-    const rx = Math.round(hit.object.position.x);
-    const ry = Math.round(hit.object.position.y);
-    const rz = Math.round(hit.object.position.z);
-    delete blockMap[`${rx},${ry},${rz}`];
-    const ri = raycastMeshes.findIndex(m => Math.round(m.position.x)===rx && Math.round(m.position.y)===ry && Math.round(m.position.z)===rz);
-    if (ri !== -1) { scene.remove(raycastMeshes[ri]); raycastMeshes.splice(ri, 1); }
-    const fi = freeBlocks.findIndex(m => Math.round(m.position.x)===rx && Math.round(m.position.y)===ry && Math.round(m.position.z)===rz);
-    if (fi !== -1) { scene.remove(freeBlocks[fi]); freeBlocks.splice(fi, 1); }
-    socket.emit('blockChange', { x:rx, y:ry, z:rz, type:null });
+// Removes a block visually — handles both freeBlocks and chunk merged meshes
+function removeBlockVisual(rx, ry, rz) {
+  // Remove from freeBlocks (placed blocks)
+  const fi = freeBlocks.findIndex(m =>
+    Math.round(m.position.x) === rx &&
+    Math.round(m.position.y) === ry &&
+    Math.round(m.position.z) === rz
+  );
+  if (fi !== -1) { scene.remove(freeBlocks[fi]); freeBlocks.splice(fi, 1); return; }
+
+  // Remove from chunk merged meshes — find the chunk group and rebuild it
+  const { cx, cz } = worldToChunk(rx, rz);
+  const key = chunkKey(cx, cz);
+  const group = loadedChunks[key];
+  if (!group) return;
+
+  // Rebuild blockData for this chunk minus the broken block
+  const blockData = [];
+  for (let lx = 0; lx < CHUNK_SIZE; lx++) {
+    for (let lz = 0; lz < CHUNK_SIZE; lz++) {
+      const wx = cx * CHUNK_SIZE + lx, wz = cz * CHUNK_SIZE + lz;
+      const biome = getBiome(wx, wz);
+      const h = getHeightForBiome(wx, wz);
+      const candidates = [
+        { x: wx, y: h,   z: wz, blockId: biome.topBlock },
+        { x: wx, y: h-1, z: wz, blockId: biome.topBlock === 'sand' ? 'sand' : 'dirt' },
+      ];
+      candidates.forEach(b => {
+        if (blockMap[`${b.x},${b.y},${b.z}`]) blockData.push(b);
+      });
+      if (h < WATER_LEVEL) {
+        for (let wy = h + 1; wy <= WATER_LEVEL; wy++)
+          blockData.push({ x: wx, y: wy, z: wz, blockId: 'water' });
+      }
+    }
   }
+
+  // Also include any freeBlocks that landed in this chunk
+  freeBlocks.forEach(m => {
+    const bx = Math.round(m.position.x), by = Math.round(m.position.y), bz = Math.round(m.position.z);
+    const { cx: bcx, cz: bcz } = worldToChunk(bx, bz);
+    if (bcx === cx && bcz === cz) blockData.push({ x: bx, y: by, z: bz, blockId: m.userData.blockId || 'stone' });
+  });
+
+  // Rebuild the chunk visual
+  scene.remove(group);
+  const newGroup = new THREE.Group();
+  buildChunkMesh(blockData, newGroup);
+  scene.add(newGroup);
+  loadedChunks[key] = newGroup;
+}
+
+function breakBlock(rx, ry, rz) {
+  const key = `${rx},${ry},${rz}`;
+  if (!blockMap[key]) return;
+  delete blockMap[key];
+  removeBlockVisual(rx, ry, rz);
+  socket.emit('blockChange', { x: rx, y: ry, z: rz, type: null });
+}
+
+function placeBlock(rx, ry, rz, nx, ny, nz) {
+  const px = rx + nx, py = ry + ny, pz = rz + nz;
+  const key = `${px},${py},${pz}`;
+  if (blockMap[key]) return;
+  const def = getBlockDef(selectedBlock);
+  const newBlock = new THREE.Mesh(new THREE.BoxGeometry(1,1,1), makeMaterials(def));
+  newBlock.position.set(px, py, pz);
+  newBlock.userData.blockId = selectedBlock;
+  scene.add(newBlock); freeBlocks.push(newBlock);
+  blockMap[key] = true;
+  socket.emit('blockChange', { x: px, y: py, z: pz, type: selectedBlock });
+}
+
+function doBreak() {
+  const hit = voxelRaycast(8);
+  if (hit) breakBlock(hit.x, hit.y, hit.z);
 }
 
 function doPlace() {
-  mouse.x = 0; mouse.y = 0;
-  raycaster.setFromCamera(mouse, camera);
-  const targets = [...raycastMeshes, ...freeBlocks];
-  const intersects = raycaster.intersectObjects(targets);
-  if (intersects.length > 0) {
-    const hit = intersects[0];
-    const normal = hit.face.normal;
-    const nx = Math.round(hit.object.position.x) + Math.round(normal.x);
-    const ny = Math.round(hit.object.position.y) + Math.round(normal.y);
-    const nz = Math.round(hit.object.position.z) + Math.round(normal.z);
-    if (blockMap[`${nx},${ny},${nz}`]) return;
-    const def = getBlockDef(selectedBlock);
-    const newBlock = new THREE.Mesh(new THREE.BoxGeometry(1,1,1), makeMaterials(def));
-    newBlock.position.set(nx, ny, nz);
-    scene.add(newBlock); freeBlocks.push(newBlock);
-    blockMap[`${nx},${ny},${nz}`] = true;
-    addRaycastBlock(nx, ny, nz, selectedBlock);
-    socket.emit('blockChange', { x:nx, y:ny, z:nz, type:selectedBlock });
-  }
+  const hit = voxelRaycast(8);
+  if (hit) placeBlock(hit.x, hit.y, hit.z, hit.nx, hit.ny, hit.nz);
 }
 
 document.addEventListener('mousedown', function(event) {
@@ -965,31 +1050,12 @@ document.addEventListener('mousedown', function(event) {
   if (event.target.closest('#inventory')) return;
   if (event.target.closest('#pausemenu')) return;
   if (!document.pointerLockElement) return;
-  if (isFirstPerson) { mouse.x = 0; mouse.y = 0; }
-  else { mouse.x = (event.clientX / window.innerWidth) * 2 - 1; mouse.y = -(event.clientY / window.innerHeight) * 2 + 1; }
-  const targets = [...raycastMeshes, ...freeBlocks];
-  raycaster.setFromCamera(mouse, camera);
-  const intersects = raycaster.intersectObjects(targets);
-  if (intersects.length > 0) {
-    const hit = intersects[0];
-    const rx = Math.round(hit.object.position.x), ry = Math.round(hit.object.position.y), rz = Math.round(hit.object.position.z);
-    if (event.button === 2) {
-      delete blockMap[`${rx},${ry},${rz}`];
-      const ri = raycastMeshes.findIndex(m => Math.round(m.position.x)===rx && Math.round(m.position.y)===ry && Math.round(m.position.z)===rz);
-      if (ri !== -1) { scene.remove(raycastMeshes[ri]); raycastMeshes.splice(ri, 1); }
-      const fi = freeBlocks.findIndex(m => Math.round(m.position.x)===rx && Math.round(m.position.y)===ry && Math.round(m.position.z)===rz);
-      if (fi !== -1) { scene.remove(freeBlocks[fi]); freeBlocks.splice(fi, 1); }
-      socket.emit('blockChange', { x:rx, y:ry, z:rz, type:null });
-    } else {
-      const normal = hit.face.normal;
-      const nx = rx + Math.round(normal.x), ny = ry + Math.round(normal.y), nz = rz + Math.round(normal.z);
-      if (blockMap[`${nx},${ny},${nz}`]) return;
-      const def = getBlockDef(selectedBlock);
-      const newBlock = new THREE.Mesh(new THREE.BoxGeometry(1,1,1), makeMaterials(def));
-      newBlock.position.set(nx, ny, nz); scene.add(newBlock); freeBlocks.push(newBlock);
-      blockMap[`${nx},${ny},${nz}`] = true; addRaycastBlock(nx, ny, nz, selectedBlock);
-      socket.emit('blockChange', { x:nx, y:ny, z:nz, type:selectedBlock });
-    }
+  const hit = voxelRaycast(8);
+  if (!hit) return;
+  if (event.button === 2) {
+    breakBlock(hit.x, hit.y, hit.z);
+  } else if (event.button === 0) {
+    placeBlock(hit.x, hit.y, hit.z, hit.nx, hit.ny, hit.nz);
   }
 });
 
