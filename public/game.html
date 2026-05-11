@@ -620,10 +620,10 @@ function pushFace(positions, normals, uvs, indices, x, y, z, faceDir) {
   let verts, norm;
   switch (faceDir) {
     case 'top':
-      verts = [x-h,y+h,z+h, x+h,y+h,z+h, x+h,y+h,z-h, x-h,y+h,z-h];
+      verts = [x-h,y+h,z-h, x+h,y+h,z-h, x+h,y+h,z+h, x-h,y+h,z+h];
       norm  = [0,1,0]; break;
     case 'bottom':
-      verts = [x-h,y-h,z-h, x+h,y-h,z-h, x+h,y-h,z+h, x-h,y-h,z+h];
+      verts = [x-h,y-h,z+h, x+h,y-h,z+h, x+h,y-h,z-h, x-h,y-h,z-h];
       norm  = [0,-1,0]; break;
     case 'front':
       verts = [x-h,y-h,z+h, x+h,y-h,z+h, x+h,y+h,z+h, x-h,y+h,z+h];
@@ -643,7 +643,12 @@ function pushFace(positions, normals, uvs, indices, x, y, z, faceDir) {
     normals.push(norm[0], norm[1], norm[2]);
   }
   uvs.push(0,0, 1,0, 1,1, 0,1);
-  indices.push(i, i+1, i+2, i, i+2, i+3);
+  // Top face needs reversed winding to face upward correctly
+  if (faceDir === 'top') {
+    indices.push(i, i+2, i+1, i, i+3, i+2);
+  } else {
+    indices.push(i, i+1, i+2, i, i+2, i+3);
+  }
 }
 
 // ============================================================
