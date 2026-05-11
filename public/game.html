@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-
 <html>
 <head>
   <title>DogBlox</title>
@@ -10,233 +9,232 @@
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { overflow: hidden; touch-action: none; }
 
-#hotbar {
-  position: fixed;
-  bottom: 24px;
-  left: 50%;
-  transform: translateX(-50%);
-  display: flex;
-  gap: 6px;
-  background: rgba(10,10,20,0.85);
-  padding: 8px 10px;
-  border-radius: 40px;
-  border: 1px solid rgba(255,255,255,0.1);
-  backdrop-filter: blur(10px);
-  z-index: 50;
-}
+    #hotbar {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 6px;
+      background: rgba(10,10,20,0.85);
+      padding: 8px 10px;
+      border-radius: 40px;
+      border: 1px solid rgba(255,255,255,0.1);
+      backdrop-filter: blur(10px);
+      z-index: 50;
+    }
 
-.slot {
-  width: 52px; height: 52px;
-  background: rgba(255,255,255,0.05);
-  border: 2px solid rgba(255,255,255,0.15);
-  border-radius: 12px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  position: relative;
-  transition: transform 0.1s, border-color 0.15s, background 0.15s;
-}
+    .slot {
+      width: 52px; height: 52px;
+      background: rgba(255,255,255,0.05);
+      border: 2px solid rgba(255,255,255,0.15);
+      border-radius: 12px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      position: relative;
+      transition: transform 0.1s, border-color 0.15s, background 0.15s;
+    }
 
-.slot:hover { background: rgba(255,255,255,0.12); transform: translateY(-3px); }
+    .slot:hover { background: rgba(255,255,255,0.12); transform: translateY(-3px); }
 
-.slot.active {
-  border-color: #44aa44;
-  background: rgba(68,170,68,0.15);
-  transform: translateY(-4px);
-  box-shadow: 0 0 12px rgba(68,170,68,0.4);
-}
+    .slot.active {
+      border-color: #44aa44;
+      background: rgba(68,170,68,0.15);
+      transform: translateY(-4px);
+      box-shadow: 0 0 12px rgba(68,170,68,0.4);
+    }
 
-.slot-icon { width: 36px; height: 36px; image-rendering: pixelated; border-radius: 4px; object-fit: cover; }
-.slot-number { position: absolute; top: 3px; left: 5px; font-size: 9px; color: rgba(255,255,255,0.5); font-family: Arial, sans-serif; font-weight: bold; }
+    .slot-icon { width: 36px; height: 36px; image-rendering: pixelated; border-radius: 4px; object-fit: cover; }
+    .slot-number { position: absolute; top: 3px; left: 5px; font-size: 9px; color: rgba(255,255,255,0.5); font-family: Arial, sans-serif; font-weight: bold; }
 
-.slot-tooltip {
-  position: absolute; bottom: 64px; left: 50%;
-  transform: translateX(-50%);
-  background: rgba(0,0,0,0.9); color: white;
-  font-family: Arial, sans-serif; font-size: 11px;
-  padding: 4px 8px; border-radius: 4px;
-  white-space: nowrap; pointer-events: none; display: none; z-index: 200;
-}
-.slot:hover .slot-tooltip { display: block; }
+    .slot-tooltip {
+      position: absolute; bottom: 64px; left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0,0,0,0.9); color: white;
+      font-family: Arial, sans-serif; font-size: 11px;
+      padding: 4px 8px; border-radius: 4px;
+      white-space: nowrap; pointer-events: none; display: none; z-index: 200;
+    }
+    .slot:hover .slot-tooltip { display: block; }
 
-#inventory {
-  position: fixed; top: 0; left: 0;
-  width: 100%; height: 100%;
-  display: none; align-items: center; justify-content: center; z-index: 100;
-}
-#inventory.open { display: flex; background: rgba(0,0,10,0.75); backdrop-filter: blur(4px); }
+    #inventory {
+      position: fixed; top: 0; left: 0;
+      width: 100%; height: 100%;
+      display: none; align-items: center; justify-content: center; z-index: 100;
+    }
+    #inventory.open { display: flex; background: rgba(0,0,10,0.75); backdrop-filter: blur(4px); }
 
-#inventory-panel {
-  background: rgba(10,10,25,0.95);
-  border: 1px solid rgba(255,255,255,0.12);
-  border-radius: 16px; padding: 24px;
-  width: 90%; max-width: 580px; max-height: 80vh;
-  overflow-y: auto; animation: invSlideIn 0.2s ease;
-}
+    #inventory-panel {
+      background: rgba(10,10,25,0.95);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 16px; padding: 24px;
+      width: 90%; max-width: 580px; max-height: 80vh;
+      overflow-y: auto; animation: invSlideIn 0.2s ease;
+    }
 
-@keyframes invSlideIn {
-  from { transform: translateY(20px); opacity: 0; }
-  to   { transform: translateY(0);    opacity: 1; }
-}
+    @keyframes invSlideIn {
+      from { transform: translateY(20px); opacity: 0; }
+      to   { transform: translateY(0);    opacity: 1; }
+    }
 
-#inventory-panel h2 { font-family: Arial Black, sans-serif; font-size: 18px; color: white; margin-bottom: 4px; letter-spacing: 2px; }
-#inventory-panel > p { color: #555; font-size: 12px; margin-bottom: 20px; font-family: Arial, sans-serif; }
+    #inventory-panel h2 { font-family: Arial Black, sans-serif; font-size: 18px; color: white; margin-bottom: 4px; letter-spacing: 2px; }
+    #inventory-panel > p { color: #555; font-size: 12px; margin-bottom: 20px; font-family: Arial, sans-serif; }
 
-.inv-category {
-  font-family: Arial Black, sans-serif; font-size: 11px; color: #666;
-  letter-spacing: 2px; text-transform: uppercase;
-  margin: 16px 0 8px 0; padding-bottom: 6px;
-  border-bottom: 1px solid rgba(255,255,255,0.06);
-}
+    .inv-category {
+      font-family: Arial Black, sans-serif; font-size: 11px; color: #666;
+      letter-spacing: 2px; text-transform: uppercase;
+      margin: 16px 0 8px 0; padding-bottom: 6px;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
 
-.inv-grid { display: grid; grid-template-columns: repeat(6,1fr); gap: 8px; margin-bottom: 8px; }
+    .inv-grid { display: grid; grid-template-columns: repeat(6,1fr); gap: 8px; margin-bottom: 8px; }
 
-.inv-slot {
-  aspect-ratio: 1;
-  background: rgba(255,255,255,0.04);
-  border: 1px solid rgba(255,255,255,0.08);
-  border-radius: 10px;
-  display: flex; flex-direction: column;
-  align-items: center; justify-content: center;
-  cursor: pointer; transition: all 0.15s;
-  padding: 8px; gap: 4px;
-}
-.inv-slot:hover { background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.25); transform: scale(1.05); }
-.inv-slot.selected { border-color: #44aa44; background: rgba(68,170,68,0.12); box-shadow: 0 0 8px rgba(68,170,68,0.3); }
-.inv-icon { width: 40px; height: 40px; image-rendering: pixelated; object-fit: cover; border-radius: 4px; }
-.inv-slot-name { font-size: 9px; color: #888; font-family: Arial, sans-serif; text-align: center; white-space: nowrap; }
+    .inv-slot {
+      aspect-ratio: 1;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 10px;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      cursor: pointer; transition: all 0.15s;
+      padding: 8px; gap: 4px;
+    }
+    .inv-slot:hover { background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.25); transform: scale(1.05); }
+    .inv-slot.selected { border-color: #44aa44; background: rgba(68,170,68,0.12); box-shadow: 0 0 8px rgba(68,170,68,0.3); }
+    .inv-icon { width: 40px; height: 40px; image-rendering: pixelated; object-fit: cover; border-radius: 4px; }
+    .inv-slot-name { font-size: 9px; color: #888; font-family: Arial, sans-serif; text-align: center; white-space: nowrap; }
 
-#pausemenu {
-  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-  background: rgba(0,0,0,0.6); align-items: center; justify-content: center;
-}
-#pausebox { background: #111122; padding: 40px; text-align: center; border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; }
-#pausebox h2 { color: white; font-family: Arial Black, sans-serif; margin-bottom: 20px; letter-spacing: 2px; }
-#resumebtn {
-  background: #44aa44; color: white; border: none; padding: 12px 24px;
-  font-size: 16px; cursor: pointer; font-family: Arial Black, sans-serif;
-  border-radius: 6px; margin-bottom: 12px; display: block; width: 100%; letter-spacing: 1px;
-}
-#quitbtn-ingame {
-  background: transparent; color: #ff6666; border: 1px solid rgba(255,100,100,0.3);
-  padding: 12px 24px; font-size: 14px; cursor: pointer;
-  font-family: Arial, sans-serif; border-radius: 6px; display: block; width: 100%;
-}
+    #pausemenu {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.6); align-items: center; justify-content: center;
+    }
+    #pausebox { background: #111122; padding: 40px; text-align: center; border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; }
+    #pausebox h2 { color: white; font-family: Arial Black, sans-serif; margin-bottom: 20px; letter-spacing: 2px; }
+    #resumebtn {
+      background: #44aa44; color: white; border: none; padding: 12px 24px;
+      font-size: 16px; cursor: pointer; font-family: Arial Black, sans-serif;
+      border-radius: 6px; margin-bottom: 12px; display: block; width: 100%; letter-spacing: 1px;
+    }
+    #quitbtn-ingame {
+      background: transparent; color: #ff6666; border: 1px solid rgba(255,100,100,0.3);
+      padding: 12px 24px; font-size: 14px; cursor: pointer;
+      font-family: Arial, sans-serif; border-radius: 6px; display: block; width: 100%;
+    }
 
-#crosshair {
-  position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%);
-  width: 20px; height: 20px; pointer-events: none; display: none;
-}
-#crosshair::before, #crosshair::after { content: ''; position: absolute; background: white; opacity: 0.8; }
-#crosshair::before { width: 2px; height: 100%; left: 50%; transform: translateX(-50%); }
-#crosshair::after { width: 100%; height: 2px; top: 50%; transform: translateY(-50%); }
+    #crosshair {
+      position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%);
+      width: 20px; height: 20px; pointer-events: none; display: none;
+    }
+    #crosshair::before, #crosshair::after { content: ''; position: absolute; background: white; opacity: 0.8; }
+    #crosshair::before { width: 2px; height: 100%; left: 50%; transform: translateX(-50%); }
+    #crosshair::after { width: 100%; height: 2px; top: 50%; transform: translateY(-50%); }
 
-#hud-username {
-  position: fixed; top: 16px; left: 50%; transform: translateX(-50%);
-  color: white; font-family: Arial, sans-serif; font-size: 13px;
-  background: rgba(0,0,0,0.4); padding: 4px 12px; border-radius: 20px; letter-spacing: 1px;
-}
-#biome-indicator {
-  position: fixed; top: 48px; left: 50%; transform: translateX(-50%);
-  color: rgba(255,255,255,0.6); font-family: Arial, sans-serif; font-size: 11px;
-  letter-spacing: 2px; text-transform: uppercase; pointer-events: none;
-}
-#player-count {
-  position: fixed; top: 16px; right: 16px; color: white;
-  font-family: Arial, sans-serif; font-size: 12px;
-  background: rgba(0,0,0,0.4); padding: 4px 12px; border-radius: 20px;
-}
-#underwater-overlay {
-  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-  background: rgba(0,50,150,0.35); pointer-events: none; display: none; z-index: 5;
-}
+    #hud-username {
+      position: fixed; top: 16px; left: 50%; transform: translateX(-50%);
+      color: white; font-family: Arial, sans-serif; font-size: 13px;
+      background: rgba(0,0,0,0.4); padding: 4px 12px; border-radius: 20px; letter-spacing: 1px;
+    }
+    #biome-indicator {
+      position: fixed; top: 48px; left: 50%; transform: translateX(-50%);
+      color: rgba(255,255,255,0.6); font-family: Arial, sans-serif; font-size: 11px;
+      letter-spacing: 2px; text-transform: uppercase; pointer-events: none;
+    }
+    #player-count {
+      position: fixed; top: 16px; right: 16px; color: white;
+      font-family: Arial, sans-serif; font-size: 12px;
+      background: rgba(0,0,0,0.4); padding: 4px 12px; border-radius: 20px;
+    }
+    #underwater-overlay {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,50,150,0.35); pointer-events: none; display: none; z-index: 5;
+    }
 
-#chat-box { position: fixed; bottom: 100px; left: 16px; width: 320px; z-index: 50; }
-#chat-messages { display: flex; flex-direction: column; gap: 3px; margin-bottom: 6px; max-height: 160px; overflow: hidden; }
-.chat-msg {
-  font-family: Arial, sans-serif; font-size: 13px; color: white;
-  background: rgba(0,0,0,0.45); padding: 3px 8px; border-radius: 4px;
-  width: fit-content; max-width: 100%; word-break: break-word;
-}
-.chat-msg .chat-name { font-weight: bold; margin-right: 4px; }
-#chat-input-row { display: none; gap: 6px; }
-#chat-input-row.active { display: flex; }
-#chat-input {
-  flex: 1; padding: 7px 10px; background: rgba(0,0,0,0.7);
-  border: 1px solid rgba(255,255,255,0.2); border-radius: 4px;
-  color: white; font-size: 13px; outline: none;
-}
-#chat-send {
-  padding: 7px 14px; background: #44aa44; border: none; border-radius: 4px;
-  color: white; font-family: Arial Black, sans-serif; font-size: 12px; cursor: pointer;
-}
+    #chat-box { position: fixed; bottom: 100px; left: 16px; width: 320px; z-index: 50; }
+    #chat-messages { display: flex; flex-direction: column; gap: 3px; margin-bottom: 6px; max-height: 160px; overflow: hidden; }
+    .chat-msg {
+      font-family: Arial, sans-serif; font-size: 13px; color: white;
+      background: rgba(0,0,0,0.45); padding: 3px 8px; border-radius: 4px;
+      width: fit-content; max-width: 100%; word-break: break-word;
+    }
+    .chat-msg .chat-name { font-weight: bold; margin-right: 4px; }
+    #chat-input-row { display: none; gap: 6px; }
+    #chat-input-row.active { display: flex; }
+    #chat-input {
+      flex: 1; padding: 7px 10px; background: rgba(0,0,0,0.7);
+      border: 1px solid rgba(255,255,255,0.2); border-radius: 4px;
+      color: white; font-size: 13px; outline: none;
+    }
+    #chat-send {
+      padding: 7px 14px; background: #44aa44; border: none; border-radius: 4px;
+      color: white; font-family: Arial Black, sans-serif; font-size: 12px; cursor: pointer;
+    }
 
-#loading-screen {
-  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-  background: #0d0d1a; display: flex; flex-direction: column;
-  align-items: center; justify-content: center; z-index: 999;
-}
-#loading-title { font-family: Arial Black, sans-serif; font-size: 48px; color: white; letter-spacing: 4px; margin-bottom: 24px; text-shadow: 3px 3px 0 #000; }
-#loading-bar-bg { width: 300px; height: 6px; background: rgba(255,255,255,0.1); border-radius: 3px; overflow: hidden; margin-bottom: 12px; }
-#loading-bar-fill { height: 100%; background: #44aa44; border-radius: 3px; width: 0%; transition: width 0.1s; }
-#loading-text { color: #666; font-family: Arial, sans-serif; font-size: 13px; letter-spacing: 1px; }
+    #loading-screen {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: #0d0d1a; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; z-index: 999;
+    }
+    #loading-title { font-family: Arial Black, sans-serif; font-size: 48px; color: white; letter-spacing: 4px; margin-bottom: 24px; text-shadow: 3px 3px 0 #000; }
+    #loading-bar-bg { width: 300px; height: 6px; background: rgba(255,255,255,0.1); border-radius: 3px; overflow: hidden; margin-bottom: 12px; }
+    #loading-bar-fill { height: 100%; background: #44aa44; border-radius: 3px; width: 0%; transition: width 0.1s; }
+    #loading-text { color: #666; font-family: Arial, sans-serif; font-size: 13px; letter-spacing: 1px; }
 
-#debug {
-  position: fixed; top: 50px; left: 10px; color: white; font-family: monospace;
-  font-size: 12px; background: rgba(0,0,0,0.4); padding: 6px 10px; border-radius: 4px; pointer-events: none;
-}
+    #debug {
+      position: fixed; top: 50px; left: 10px; color: white; font-family: monospace;
+      font-size: 12px; background: rgba(0,0,0,0.4); padding: 6px 10px; border-radius: 4px; pointer-events: none;
+    }
 
-#mobile-controls {
-  position: fixed; bottom: 0; left: 0;
-  width: 100%; height: 220px;
-  pointer-events: none; z-index: 60; display: none;
-}
-#joystick-zone {
-  position: absolute; bottom: 20px; left: 20px;
-  width: 130px; height: 130px; pointer-events: all;
-}
-#joystick-base {
-  width: 130px; height: 130px;
-  background: rgba(255,255,255,0.12);
-  border: 2px solid rgba(255,255,255,0.3);
-  border-radius: 50%; position: relative;
-}
-#joystick-thumb {
-  width: 54px; height: 54px;
-  background: rgba(255,255,255,0.5);
-  border-radius: 50%; position: absolute;
-  top: 50%; left: 50%;
-  transform: translate(-50%,-50%);
-}
-#mobile-buttons {
-  position: absolute; bottom: 20px; right: 20px;
-  display: flex; flex-direction: column; gap: 10px; pointer-events: all;
-}
-#mobile-buttons button {
-  width: 68px; height: 68px;
-  border-radius: 50%;
-  border: 2px solid rgba(255,255,255,0.3);
-  color: white; font-size: 26px; cursor: pointer;
-  -webkit-tap-highlight-color: transparent;
-}
-#btn-jump  { background: rgba(68,170,68,0.6);  }
-#btn-break { background: rgba(200,50,50,0.6);  }
-#btn-place { background: rgba(50,100,200,0.6); }
-#btn-exit  { background: rgba(255,100,100,0.6); }
+    #mobile-controls {
+      position: fixed; bottom: 0; left: 0;
+      width: 100%; height: 220px;
+      pointer-events: none; z-index: 60; display: none;
+    }
+    #joystick-zone {
+      position: absolute; bottom: 20px; left: 20px;
+      width: 130px; height: 130px; pointer-events: all;
+    }
+    #joystick-base {
+      width: 130px; height: 130px;
+      background: rgba(255,255,255,0.12);
+      border: 2px solid rgba(255,255,255,0.3);
+      border-radius: 50%; position: relative;
+    }
+    #joystick-thumb {
+      width: 54px; height: 54px;
+      background: rgba(255,255,255,0.5);
+      border-radius: 50%; position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%,-50%);
+    }
+    #mobile-buttons {
+      position: absolute; bottom: 20px; right: 20px;
+      display: flex; flex-direction: column; gap: 10px; pointer-events: all;
+    }
+    #mobile-buttons button {
+      width: 68px; height: 68px;
+      border-radius: 50%;
+      border: 2px solid rgba(255,255,255,0.3);
+      color: white; font-size: 26px; cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+    #btn-jump  { background: rgba(68,170,68,0.6);  }
+    #btn-break { background: rgba(200,50,50,0.6);  }
+    #btn-place { background: rgba(50,100,200,0.6); }
+    #btn-exit  { background: rgba(255,100,100,0.6); }
 
-#mobile-inv-btn {
-  position: fixed; top: 80px; right: 16px;
-  width: 52px; height: 52px;
-  background: rgba(0,0,0,0.5);
-  border: 1px solid rgba(255,255,255,0.2);
-  border-radius: 12px; color: white; font-size: 22px;
-  display: none; align-items: center; justify-content: center;
-  cursor: pointer; z-index: 60; pointer-events: all;
-  -webkit-tap-highlight-color: transparent;
-}
-
+    #mobile-inv-btn {
+      position: fixed; top: 80px; right: 16px;
+      width: 52px; height: 52px;
+      background: rgba(0,0,0,0.5);
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 12px; color: white; font-size: 22px;
+      display: none; align-items: center; justify-content: center;
+      cursor: pointer; z-index: 60; pointer-events: all;
+      -webkit-tap-highlight-color: transparent;
+    }
   </style>
 </head>
 <body>
@@ -305,7 +303,6 @@
 <div id="mobile-inv-btn">🎒</div>
 
 <script src="/socket.io/socket.io.js"></script>
-
 <script>
 // ============================================================
 // BLOCK DEFINITIONS
@@ -623,10 +620,10 @@ function pushFace(positions, normals, uvs, indices, x, y, z, faceDir) {
   let verts, norm;
   switch (faceDir) {
     case 'top':
-      verts = [x-h,y+h,z-h, x+h,y+h,z-h, x+h,y+h,z+h, x-h,y+h,z+h];
+      verts = [x-h,y+h,z+h, x+h,y+h,z+h, x+h,y+h,z-h, x-h,y+h,z-h];
       norm  = [0,1,0]; break;
     case 'bottom':
-      verts = [x-h,y-h,z+h, x+h,y-h,z+h, x+h,y-h,z-h, x-h,y-h,z-h];
+      verts = [x-h,y-h,z-h, x+h,y-h,z-h, x+h,y-h,z+h, x-h,y-h,z+h];
       norm  = [0,-1,0]; break;
     case 'front':
       verts = [x-h,y-h,z+h, x+h,y-h,z+h, x+h,y+h,z+h, x-h,y+h,z+h];
@@ -1099,17 +1096,16 @@ socket.on('chatMessage',   (data) => addChatMessage(data.username, data.message)
 function applyBlockChange(x, y, z, type) {
   const key = `${x},${y},${z}`;
   if (type === null) {
+    if (!blockMap[key]) return;
     delete blockMap[key];
-    const ri = raycastMeshes.findIndex(m => Math.round(m.position.x)===x && Math.round(m.position.y)===y && Math.round(m.position.z)===z);
-    if (ri !== -1) { scene.remove(raycastMeshes[ri]); raycastMeshes.splice(ri, 1); }
-    const fi = freeBlocks.findIndex(m => Math.round(m.position.x)===x && Math.round(m.position.y)===y && Math.round(m.position.z)===z);
-    if (fi !== -1) { scene.remove(freeBlocks[fi]); freeBlocks.splice(fi, 1); }
+    removeBlockVisual(x, y, z);
   } else {
     if (blockMap[key]) return;
     const def = getBlockDef(type);
     const mesh = new THREE.Mesh(new THREE.BoxGeometry(1,1,1), makeMaterials(def));
-    mesh.position.set(x, y, z); scene.add(mesh); freeBlocks.push(mesh); blockMap[key] = true;
-    addRaycastBlock(x, y, z, type);
+    mesh.position.set(x, y, z);
+    mesh.userData.blockId = type;
+    scene.add(mesh); freeBlocks.push(mesh); blockMap[key] = true;
   }
 }
 
@@ -1125,19 +1121,7 @@ async function startGame() {
   setLoading(10, 'Generating spawn chunks...'); await sleep(50);
   for (let dx = -2; dx <= 2; dx++) for (let dz = -2; dz <= 2; dz++) generateChunk(dx, dz);
 
-  setLoading(50, 'Building collision data...'); await sleep(50);
-  for (let dx = -2; dx <= 2; dx++) {
-    for (let dz = -2; dz <= 2; dz++) {
-      for (let lx = 0; lx < CHUNK_SIZE; lx++) {
-        for (let lz = 0; lz < CHUNK_SIZE; lz++) {
-          const wx = dx * CHUNK_SIZE + lx, wz = dz * CHUNK_SIZE + lz;
-          const h = getHeightForBiome(wx, wz);
-          addRaycastBlock(wx, h, wz, getBiome(wx, wz).topBlock);
-          addRaycastBlock(wx, h-1, wz, 'dirt');
-        }
-      }
-    }
-  }
+  setLoading(50, 'Building world...'); await sleep(50);
 
   setLoading(80, 'Spawning...'); await sleep(50);
   const spawnY = Math.max(getHeightForBiome(8, 8), WATER_LEVEL) + 3;
@@ -1319,6 +1303,5 @@ window.addEventListener('resize', function() {
   renderer.setSize(window.innerWidth, window.innerHeight);
 });
 </script>
-
 </body>
 </html>
