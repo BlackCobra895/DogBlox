@@ -236,6 +236,7 @@
   cursor: pointer; z-index: 60; pointer-events: all;
   -webkit-tap-highlight-color: transparent;
 }
+```
 
   </style>
 </head>
@@ -637,23 +638,25 @@ function buildChunkMesh(blockData, group) {
     const faceOrder = ['top', 'side', 'bottom'];
     const allPos = [], allNor = [], allUvs = [], allIdx = [];
     const materials = [];
+    const groups = []; // { start, count, matIndex }
     let vertOffset = 0;
+    let matIndex = 0;
 
-    faceOrder.forEach((partName, matIndex) => {
+    faceOrder.forEach(partName => {
       const part = parts[partName];
-      if (part.pos.length === 0) return;
+      if (part.pos.length === 0) return; // skip empty — matIndex NOT incremented
+
       const start = allIdx.length;
       part.idx.forEach(i => allIdx.push(i + vertOffset));
       allPos.push(...part.pos);
       allNor.push(...part.nor);
       allUvs.push(...part.uvs);
       const count = allIdx.length - start;
-      // We'll add the group after setAttribute, tracked here
-      parts[partName]._groupStart = start;
-      parts[partName]._groupCount = count;
-      parts[partName]._matIndex   = matIndex;
       vertOffset += part.pos.length / 3;
+
+      groups.push({ start, count, matIndex });
       materials.push(getFaceMat(def, partName));
+      matIndex++;
     });
 
     if (allPos.length === 0) return;
@@ -663,15 +666,7 @@ function buildChunkMesh(blockData, group) {
     geo.setAttribute('normal',   new THREE.BufferAttribute(new Float32Array(allNor), 3));
     geo.setAttribute('uv',       new THREE.BufferAttribute(new Float32Array(allUvs), 2));
     geo.setIndex(allIdx);
-
-    // Add groups now that geometry is built
-    faceOrder.forEach(partName => {
-      const part = parts[partName];
-      if (part._groupCount > 0) {
-        geo.addGroup(part._groupStart, part._groupCount, part._matIndex);
-      }
-    });
-
+    groups.forEach(g => geo.addGroup(g.start, g.count, g.matIndex));
     geo.computeBoundingSphere();
 
     const mesh = new THREE.Mesh(geo, materials);
