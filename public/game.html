@@ -486,22 +486,48 @@ function voxelRaycast(maxDist = 8) {
   camera.getWorldDirection(dir);
   const pos = camera.position.clone();
 
-  let x = Math.floor(pos.x), y = Math.floor(pos.y), z = Math.floor(pos.z);
-  const stepX = dir.x >= 0 ? 1 : -1, stepY = dir.y >= 0 ? 1 : -1, stepZ = dir.z >= 0 ? 1 : -1;
-  const tDeltaX = Math.abs(1 / dir.x), tDeltaY = Math.abs(1 / dir.y), tDeltaZ = Math.abs(1 / dir.z);
-  let tMaxX = dir.x === 0 ? Infinity : (stepX > 0 ? Math.ceil(pos.x) - pos.x : pos.x - Math.floor(pos.x)) / Math.abs(dir.x);
-  let tMaxY = dir.y === 0 ? Infinity : (stepY > 0 ? Math.ceil(pos.y) - pos.y : pos.y - Math.floor(pos.y)) / Math.abs(dir.y);
-  let tMaxZ = dir.z === 0 ? Infinity : (stepZ > 0 ? Math.ceil(pos.z) - pos.z : pos.z - Math.floor(pos.z)) / Math.abs(dir.z);
-  let lastX = x, lastY = y, lastZ = z, dist = 0;
+  function intbound(s, ds) {
+    if (ds === 0) return Infinity;
+    if (ds > 0) {
+      return (1 - (s - Math.floor(s))) / ds;
+    } else {
+      const frac = s - Math.floor(s);
+      return (frac === 0 ? 1 : frac) / -ds;
+    }
+  }
+
+  let x = Math.floor(pos.x);
+  let y = Math.floor(pos.y);
+  let z = Math.floor(pos.z);
+
+  const stepX = dir.x > 0 ? 1 : dir.x < 0 ? -1 : 0;
+  const stepY = dir.y > 0 ? 1 : dir.y < 0 ? -1 : 0;
+  const stepZ = dir.z > 0 ? 1 : dir.z < 0 ? -1 : 0;
+
+  const tDeltaX = stepX !== 0 ? Math.abs(1 / dir.x) : Infinity;
+  const tDeltaY = stepY !== 0 ? Math.abs(1 / dir.y) : Infinity;
+  const tDeltaZ = stepZ !== 0 ? Math.abs(1 / dir.z) : Infinity;
+
+  let tMaxX = intbound(pos.x, dir.x);
+  let tMaxY = intbound(pos.y, dir.y);
+  let tMaxZ = intbound(pos.z, dir.z);
+
+  let lastX = x, lastY = y, lastZ = z;
+  let dist = 0;
 
   while (dist < maxDist) {
     if (blockMap[`${x},${y},${z}`]) {
       return { x, y, z, nx: lastX - x, ny: lastY - y, nz: lastZ - z };
     }
     lastX = x; lastY = y; lastZ = z;
-    if (tMaxX < tMaxY && tMaxX < tMaxZ) { dist = tMaxX; tMaxX += tDeltaX; x += stepX; }
-    else if (tMaxY < tMaxZ)             { dist = tMaxY; tMaxY += tDeltaY; y += stepY; }
-    else                                { dist = tMaxZ; tMaxZ += tDeltaZ; z += stepZ; }
+
+    if (tMaxX < tMaxY && tMaxX < tMaxZ) {
+      dist = tMaxX; tMaxX += tDeltaX; x += stepX;
+    } else if (tMaxY < tMaxZ) {
+      dist = tMaxY; tMaxY += tDeltaY; y += stepY;
+    } else {
+      dist = tMaxZ; tMaxZ += tDeltaZ; z += stepZ;
+    }
   }
   return null;
 }
