@@ -1257,10 +1257,10 @@ function animate(timestamp) {
   scene.background = ts; scene.fog.color.copy(ts); scene.fog.far = inWater ? 15 : 60;
   document.getElementById('biome-indicator').textContent = inWater ? 'Ocean' : cb.name;
 
-  // Player model faces the direction of travel (forward vector)
-  player.rotation.y += (yaw - player.rotation.y) * 0.15;
+  // Player model faces forward. +PI because the model's local front is +Z
+  // but world forward (where camera looks) is -Z when yaw=0.
+  player.rotation.y += ((yaw + Math.PI) - player.rotation.y) * 0.15;
 
-  // CAMERA — both modes use camera.rotation.y = yaw, no lookAt, no Math.PI.
   camera.rotation.order = 'YXZ';
   if (isFirstPerson) {
     camera.position.set(
@@ -1271,22 +1271,24 @@ function animate(timestamp) {
     camera.rotation.y = yaw;
     camera.rotation.x = pitch;
   } else {
-    // Third person: camera sits BEHIND the player.
-    // Behind = opposite of forward = +sin(yaw), +cos(yaw)
+    // Camera sits BEHIND the player: behind = -forward = -(-sin,−cos) = +sin,+cos
+    // But camera needs to look TOWARD the player, so rotation = yaw + PI
     const distance = 5; let safeDist = 1;
     for (let d = 1; d <= distance; d += 0.5) {
-      const tx = player.position.x + Math.sin(yaw) * d;
-      const tz = player.position.z + Math.cos(yaw) * d;
+      // Check behind the player (same direction camera moves)
+      const tx = player.position.x - fwdX * d;
+      const tz = player.position.z - fwdZ * d;
       if (blockMap[`${Math.round(tx)},${Math.round(player.position.y + 2)},${Math.round(tz)}`]) break;
       safeDist = d;
     }
     camera.position.set(
-      player.position.x + Math.sin(yaw) * safeDist,
+      player.position.x - fwdX * safeDist,
       player.position.y + 2 + pitch * 3,
-      player.position.z + Math.cos(yaw) * safeDist
+      player.position.z - fwdZ * safeDist
     );
-    camera.rotation.y = yaw;
-    camera.rotation.x = pitch * 0.5;
+    // yaw + PI makes camera look forward toward where player is going
+    camera.rotation.y = yaw + Math.PI;
+    camera.rotation.x = -pitch * 0.4;
   }
 
   document.getElementById('debug').textContent =
