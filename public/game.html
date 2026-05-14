@@ -1171,43 +1171,45 @@ function animate(timestamp) {
   inWater = player.position.y + 1.6 < WATER_LEVEL && getHeightForBiome(Math.round(player.position.x), Math.round(player.position.z)) < WATER_LEVEL;
   document.getElementById('underwater-overlay').style.display = inWater ? 'block' : 'none';
 
-  // moveYaw is now just yaw in both modes — the Math.PI flip is gone.
-  // Previously first-person added Math.PI to flip movement direction because
-  // lookAt in third-person was pointing the camera backward. Now both modes
-  // use the same yaw for camera rotation so movement direction is consistent.
-  const moveYaw = yaw;
+  // Forward = direction camera faces. With rotation.y = yaw and order YXZ:
+  // forward X = -sin(yaw), forward Z = -cos(yaw)
+  // right   X =  cos(yaw), right   Z = -sin(yaw)
+  const fwdX = -Math.sin(yaw);
+  const fwdZ = -Math.cos(yaw);
+  const rightX =  Math.cos(yaw);
+  const rightZ = -Math.sin(yaw);
   const moveAmount = MOVE_SPEED * delta;
 
   if (!chatOpen && !inventoryOpen) {
     if (keys['w']) {
-      const nx = player.position.x + Math.sin(moveYaw) * moveAmount;
-      const nz = player.position.z + Math.cos(moveYaw) * moveAmount;
+      const nx = player.position.x + fwdX * moveAmount;
+      const nz = player.position.z + fwdZ * moveAmount;
       if (!collidesAt(nx, player.position.y, player.position.z)) player.position.x = nx;
       if (!collidesAt(player.position.x, player.position.y, nz)) player.position.z = nz;
     }
     if (keys['s']) {
-      const nx = player.position.x - Math.sin(moveYaw) * moveAmount;
-      const nz = player.position.z - Math.cos(moveYaw) * moveAmount;
+      const nx = player.position.x - fwdX * moveAmount;
+      const nz = player.position.z - fwdZ * moveAmount;
       if (!collidesAt(nx, player.position.y, player.position.z)) player.position.x = nx;
       if (!collidesAt(player.position.x, player.position.y, nz)) player.position.z = nz;
     }
     if (keys['a']) {
-      const nx = player.position.x + Math.cos(moveYaw) * moveAmount;
-      const nz = player.position.z - Math.sin(moveYaw) * moveAmount;
+      const nx = player.position.x - rightX * moveAmount;
+      const nz = player.position.z - rightZ * moveAmount;
       if (!collidesAt(nx, player.position.y, player.position.z)) player.position.x = nx;
       if (!collidesAt(player.position.x, player.position.y, nz)) player.position.z = nz;
     }
     if (keys['d']) {
-      const nx = player.position.x - Math.cos(moveYaw) * moveAmount;
-      const nz = player.position.z + Math.sin(moveYaw) * moveAmount;
+      const nx = player.position.x + rightX * moveAmount;
+      const nz = player.position.z + rightZ * moveAmount;
       if (!collidesAt(nx, player.position.y, player.position.z)) player.position.x = nx;
       if (!collidesAt(player.position.x, player.position.y, nz)) player.position.z = nz;
     }
   }
 
   if (joystickActive && (Math.abs(joystickX) > 0.05 || Math.abs(joystickY) > 0.05)) {
-    const nx = player.position.x + (Math.sin(moveYaw) * -joystickY + Math.cos(moveYaw) * -joystickX) * moveAmount;
-    const nz = player.position.z + (Math.cos(moveYaw) * -joystickY - Math.sin(moveYaw) * -joystickX) * moveAmount;
+    const nx = player.position.x + (fwdX * -joystickY + rightX * joystickX) * moveAmount;
+    const nz = player.position.z + (fwdZ * -joystickY + rightZ * joystickX) * moveAmount;
     if (!collidesAt(nx, player.position.y, player.position.z)) player.position.x = nx;
     if (!collidesAt(player.position.x, player.position.y, nz)) player.position.z = nz;
   }
@@ -1255,16 +1257,10 @@ function animate(timestamp) {
   scene.background = ts; scene.fog.color.copy(ts); scene.fog.far = inWater ? 15 : 60;
   document.getElementById('biome-indicator').textContent = inWater ? 'Ocean' : cb.name;
 
-  // BUG 8 FIX — rotation lerp runs exactly once per frame, here at the end.
-  // Previously there were two identical lines: one inside the WASD block and
-  // one here unconditionally, causing double-application and jittery turning.
-  // The WASD-block copy has been removed; only this one remains.
-  player.rotation.y += (moveYaw - player.rotation.y) * 0.15;
+  // Player model faces the direction of travel (forward vector)
+  player.rotation.y += (yaw - player.rotation.y) * 0.15;
 
-  // CAMERA FIX — both modes set camera.rotation.y = yaw directly.
-  // Previously third-person called camera.lookAt(player.position) which
-  // computed an internal rotation ~Math.PI away from yaw, so switching
-  // modes flipped the view 180°. lookAt is removed; yaw drives both modes.
+  // CAMERA — both modes use camera.rotation.y = yaw, no lookAt, no Math.PI.
   camera.rotation.order = 'YXZ';
   if (isFirstPerson) {
     camera.position.set(
@@ -1275,17 +1271,19 @@ function animate(timestamp) {
     camera.rotation.y = yaw;
     camera.rotation.x = pitch;
   } else {
+    // Third person: camera sits BEHIND the player.
+    // Behind = opposite of forward = +sin(yaw), +cos(yaw)
     const distance = 5; let safeDist = 1;
     for (let d = 1; d <= distance; d += 0.5) {
-      const tx = player.position.x - Math.sin(yaw) * d;
-      const tz = player.position.z - Math.cos(yaw) * d;
+      const tx = player.position.x + Math.sin(yaw) * d;
+      const tz = player.position.z + Math.cos(yaw) * d;
       if (blockMap[`${Math.round(tx)},${Math.round(player.position.y + 2)},${Math.round(tz)}`]) break;
       safeDist = d;
     }
     camera.position.set(
-      player.position.x - Math.sin(yaw) * safeDist,
+      player.position.x + Math.sin(yaw) * safeDist,
       player.position.y + 2 + pitch * 3,
-      player.position.z - Math.cos(yaw) * safeDist
+      player.position.z + Math.cos(yaw) * safeDist
     );
     camera.rotation.y = yaw;
     camera.rotation.x = pitch * 0.5;
