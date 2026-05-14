@@ -483,27 +483,29 @@ function chunkKey(cx, cz)   { return `${cx},${cz}`; }
 // ============================================================
 // DDA VOXEL RAYCAST
 // ============================================================
-function voxelRaycast(maxDist = 8) {
-  // Commit camera matrix before reading direction — mouse events fire
-  // mid-frame before renderer.render() so without this we get last
-  // frame's direction.
+  function voxelRaycast(maxDist = 8) {
   camera.updateMatrixWorld();
 
   const dir = new THREE.Vector3();
-  camera.getWorldDirection(dir);
+  const pos = new THREE.Vector3();
 
-  // Always cast from the player's eye, not camera.position.
-  // In third-person camera is 5 units behind the player — using it as
-  // origin causes hits to land on wrong blocks.
-  const pos = new THREE.Vector3(
-    player.position.x,
-    player.position.y + 1.6,
-    player.position.z
-  );
+  if (isFirstPerson) {
+    // First person: ray from eye in exact camera direction
+    camera.getWorldDirection(dir);
+    pos.set(
+      player.position.x,
+      player.position.y + 1.6,
+      player.position.z
+    );
+  } else {
+    // Third person: ray from camera through screen center (crosshair)
+    // Use a raycaster aimed at the center of the screen
+    const ray = new THREE.Raycaster();
+    ray.setFromCamera(new THREE.Vector2(0, 0), camera);
+    dir.copy(ray.ray.direction);
+    pos.copy(ray.ray.origin);
+  }
 
-  // intbound: correct sub-voxel distance to first boundary for any coord.
-  // The old Math.ceil approach gave 0 for exact negative integers stepping
-  // negatively (e.g. z=-6.0), making the ray skip the first voxel.
   function intbound(s, ds) {
     if (ds === 0) return Infinity;
     if (ds > 0) return (1 - (s - Math.floor(s))) / ds;
@@ -585,7 +587,7 @@ function buildChunkMesh(blockData, group) {
     pushFace(fg.side.pos,   fg.side.nor,   fg.side.uvs,   fg.side.idx,   x, y, z, 'left');
     pushFace(fg.side.pos,   fg.side.nor,   fg.side.uvs,   fg.side.idx,   x, y, z, 'right');
   });
-  
+
   Object.entries(faceGroups).forEach(([blockId, parts]) => {
     const def = getBlockDef(blockId);
     const faceOrder = ['top', 'side', 'bottom'];
