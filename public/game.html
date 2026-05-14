@@ -579,13 +579,13 @@ function buildChunkMesh(blockData, group) {
     }
     const fg = faceGroups[blockId];
     pushFace(fg.top.pos,    fg.top.nor,    fg.top.uvs,    fg.top.idx,    x, y, z, 'top');
-    pushFace(fg.bottom.pos, fg.bottom.nor, fg.bottom.uvs, fg.bottom.idx, x, y, z, 'bottom');
+    pushFace(fg.bottom.pos, fg.bottom.nor, fg.bottom.uvs, fg.bottom.idx, x, y, z, 'bottom'); // this MUST be here
     pushFace(fg.side.pos,   fg.side.nor,   fg.side.uvs,   fg.side.idx,   x, y, z, 'front');
     pushFace(fg.side.pos,   fg.side.nor,   fg.side.uvs,   fg.side.idx,   x, y, z, 'back');
     pushFace(fg.side.pos,   fg.side.nor,   fg.side.uvs,   fg.side.idx,   x, y, z, 'left');
     pushFace(fg.side.pos,   fg.side.nor,   fg.side.uvs,   fg.side.idx,   x, y, z, 'right');
   });
-
+  
   Object.entries(faceGroups).forEach(([blockId, parts]) => {
     const def = getBlockDef(blockId);
     const faceOrder = ['top', 'side', 'bottom'];
