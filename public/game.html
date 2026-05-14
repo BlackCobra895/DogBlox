@@ -934,10 +934,9 @@ document.addEventListener('keydown', function(event) {
   if (event.key === 'e' || event.key === 'E') {
     if (inventoryOpen) closeInventory(); else openInventory();
   }
-  if (event.key === 'f' || event.key === 'F') {
-    isFirstPerson = !isFirstPerson; player.visible = !isFirstPerson;
-    document.getElementById('crosshair').style.display = isFirstPerson ? 'block' : 'none';
-  }
+if (event.key === 'f' || event.key === 'F') {
+  isFirstPerson = !isFirstPerson;
+}
   if (event.key === 't' || event.key === 'T') openChat();
 });
 
@@ -982,13 +981,12 @@ renderer.domElement.addEventListener('click', function() {
   if (!document.pointerLockElement && !chatOpen && !isMobile()) renderer.domElement.requestPointerLock();
 });
 
-// BUG 10 FIX — check inventoryOpen before showing pause menu.
-// Previously: exitPointerLock() on inventory open immediately fired
-// this handler with !pointerLockElement=true, showing the pause menu
-// for one frame. Now we only show the pause menu when neither the
-// inventory nor chat is open.
+// In your pointerlockchange handler, and after resuming:
+// Replace crosshair visibility logic — show it whenever pointer is locked
 document.addEventListener('pointerlockchange', function() {
-  if (!document.pointerLockElement && !chatOpen && !inventoryOpen && !isMobile()) {
+  const locked = !!document.pointerLockElement;
+  document.getElementById('crosshair').style.display = locked ? 'block' : 'none';
+  if (!locked && !chatOpen && !inventoryOpen && !isMobile()) {
     document.getElementById('pausemenu').style.display = 'flex';
   }
 });
