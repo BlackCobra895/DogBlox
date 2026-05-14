@@ -202,10 +202,10 @@ const BLOCK_DEFS = [
   { id:'grass',       name:'Grass',        category:'nature', icon:'grass_top',  textures:{top:'grass_top',side:'grass_side',bottom:'dirt'}, fallbackColor:0x44aa44 },
   { id:'dirt',        name:'Dirt',         category:'nature', icon:'dirt',       textures:{all:'dirt'},   fallbackColor:0x8B4513 },
   { id:'sand',        name:'Sand',         category:'nature', icon:'sand',       textures:{all:'sand'},   fallbackColor:0xf4d03f },
-  { id:'snow',        name:'Snow',         category:'nature', icon:'snow',   textures:{top:'snow_top',side:'snow_side',bottom:'stone'}, fallbackColor:0xeaf0fb },
+  { id:'snow',        name:'Snow',         category:'nature', icon:'snow',       textures:{top:'snow',side:'snow_side',bottom:'stone'}, fallbackColor:0xeaf0fb },
   { id:'water',       name:'Water',        category:'nature', icon:'water',      textures:{all:'water'},  fallbackColor:0x2266cc, transparent:true },
   { id:'stone',       name:'Stone',        category:'stone',  icon:'stone',      textures:{all:'stone'},  fallbackColor:0x888888 },
-  { id:'wood',        name:'Wood',         category:'wood',   icon:'wood',       textures:{top:'wood_top',side:'wood_side',bottom:'wood_top'}, fallbackColor:0xa0522d },
+  { id:'wood',        name:'Wood',         category:'wood',   icon:'wood',       textures:{top:'wood_top',side:'wood',bottom:'wood_top'}, fallbackColor:0xa0522d },
   { id:'leaves',      name:'Leaves',       category:'wood',   icon:'leaves',     textures:{all:'leaves'}, fallbackColor:0x228B22 },
   { id:'leaves_snow', name:'Snowy Leaves', category:'wood',   icon:'leaves',     textures:{all:'leaves'}, fallbackColor:0xddeeff },
   { id:'cactus',      name:'Cactus',       category:'wood',   icon:'cactus',     textures:{all:'cactus'}, fallbackColor:0x4a7c3f },
@@ -482,52 +482,53 @@ function chunkKey(cx, cz)   { return `${cx},${cz}`; }
 // DDA VOXEL RAYCAST
 // ============================================================
 function voxelRaycast(maxDist = 8) {
+  // Commit camera matrix before reading direction — mouse events fire
+  // mid-frame before renderer.render() so without this we get last
+  // frame's direction.
+  camera.updateMatrixWorld();
+
   const dir = new THREE.Vector3();
   camera.getWorldDirection(dir);
-  const pos = camera.position.clone();
 
+  // Always cast from the player's eye, not camera.position.
+  // In third-person camera is 5 units behind the player — using it as
+  // origin causes hits to land on wrong blocks.
+  const pos = new THREE.Vector3(
+    player.position.x,
+    player.position.y + 1.6,
+    player.position.z
+  );
+
+  // intbound: correct sub-voxel distance to first boundary for any coord.
+  // The old Math.ceil approach gave 0 for exact negative integers stepping
+  // negatively (e.g. z=-6.0), making the ray skip the first voxel.
   function intbound(s, ds) {
     if (ds === 0) return Infinity;
-    if (ds > 0) {
-      return (1 - (s - Math.floor(s))) / ds;
-    } else {
-      const frac = s - Math.floor(s);
-      return (frac === 0 ? 1 : frac) / -ds;
-    }
+    if (ds > 0) return (1 - (s - Math.floor(s))) / ds;
+    const frac = s - Math.floor(s);
+    return (frac === 0 ? 1 : frac) / -ds;
   }
 
-  let x = Math.floor(pos.x);
-  let y = Math.floor(pos.y);
-  let z = Math.floor(pos.z);
-
+  let x = Math.floor(pos.x), y = Math.floor(pos.y), z = Math.floor(pos.z);
   const stepX = dir.x > 0 ? 1 : dir.x < 0 ? -1 : 0;
   const stepY = dir.y > 0 ? 1 : dir.y < 0 ? -1 : 0;
   const stepZ = dir.z > 0 ? 1 : dir.z < 0 ? -1 : 0;
-
   const tDeltaX = stepX !== 0 ? Math.abs(1 / dir.x) : Infinity;
   const tDeltaY = stepY !== 0 ? Math.abs(1 / dir.y) : Infinity;
   const tDeltaZ = stepZ !== 0 ? Math.abs(1 / dir.z) : Infinity;
-
   let tMaxX = intbound(pos.x, dir.x);
   let tMaxY = intbound(pos.y, dir.y);
   let tMaxZ = intbound(pos.z, dir.z);
-
-  let lastX = x, lastY = y, lastZ = z;
-  let dist = 0;
+  let lastX = x, lastY = y, lastZ = z, dist = 0;
 
   while (dist < maxDist) {
     if (blockMap[`${x},${y},${z}`]) {
       return { x, y, z, nx: lastX - x, ny: lastY - y, nz: lastZ - z };
     }
     lastX = x; lastY = y; lastZ = z;
-
-    if (tMaxX < tMaxY && tMaxX < tMaxZ) {
-      dist = tMaxX; tMaxX += tDeltaX; x += stepX;
-    } else if (tMaxY < tMaxZ) {
-      dist = tMaxY; tMaxY += tDeltaY; y += stepY;
-    } else {
-      dist = tMaxZ; tMaxZ += tDeltaZ; z += stepZ;
-    }
+    if (tMaxX < tMaxY && tMaxX < tMaxZ) { dist = tMaxX; tMaxX += tDeltaX; x += stepX; }
+    else if (tMaxY < tMaxZ)             { dist = tMaxY; tMaxY += tDeltaY; y += stepY; }
+    else                                { dist = tMaxZ; tMaxZ += tDeltaZ; z += stepZ; }
   }
   return null;
 }
@@ -1170,7 +1171,11 @@ function animate(timestamp) {
   inWater = player.position.y + 1.6 < WATER_LEVEL && getHeightForBiome(Math.round(player.position.x), Math.round(player.position.z)) < WATER_LEVEL;
   document.getElementById('underwater-overlay').style.display = inWater ? 'block' : 'none';
 
-  const moveYaw = isFirstPerson ? yaw + Math.PI : yaw;
+  // moveYaw is now just yaw in both modes — the Math.PI flip is gone.
+  // Previously first-person added Math.PI to flip movement direction because
+  // lookAt in third-person was pointing the camera backward. Now both modes
+  // use the same yaw for camera rotation so movement direction is consistent.
+  const moveYaw = yaw;
   const moveAmount = MOVE_SPEED * delta;
 
   if (!chatOpen && !inventoryOpen) {
@@ -1256,9 +1261,19 @@ function animate(timestamp) {
   // The WASD-block copy has been removed; only this one remains.
   player.rotation.y += (moveYaw - player.rotation.y) * 0.15;
 
+  // CAMERA FIX — both modes set camera.rotation.y = yaw directly.
+  // Previously third-person called camera.lookAt(player.position) which
+  // computed an internal rotation ~Math.PI away from yaw, so switching
+  // modes flipped the view 180°. lookAt is removed; yaw drives both modes.
+  camera.rotation.order = 'YXZ';
   if (isFirstPerson) {
-    camera.position.set(player.position.x, player.position.y + 1.6, player.position.z);
-    camera.rotation.order = 'YXZ'; camera.rotation.y = yaw; camera.rotation.x = pitch;
+    camera.position.set(
+      player.position.x,
+      player.position.y + 1.6,
+      player.position.z
+    );
+    camera.rotation.y = yaw;
+    camera.rotation.x = pitch;
   } else {
     const distance = 5; let safeDist = 1;
     for (let d = 1; d <= distance; d += 0.5) {
@@ -1269,11 +1284,11 @@ function animate(timestamp) {
     }
     camera.position.set(
       player.position.x - Math.sin(yaw) * safeDist,
-      Math.max(player.position.y + 0.5, player.position.y + 2 + pitch * 3),
+      player.position.y + 2 + pitch * 3,
       player.position.z - Math.cos(yaw) * safeDist
     );
-    camera.rotation.order = 'YXZ'; camera.rotation.y = yaw; camera.rotation.x = 0;
-    camera.lookAt(player.position);
+    camera.rotation.y = yaw;
+    camera.rotation.x = pitch * 0.5;
   }
 
   document.getElementById('debug').textContent =
