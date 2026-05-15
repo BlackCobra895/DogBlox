@@ -900,17 +900,18 @@ let rottweilerModel = null;
 
 // Preload the rottweiler model once
 mobGltfLoader.load('assets/rottweiler.gltf', function(gltf) {
-  rottweilerModel = gltf.scene;
-  // Apply texture
   const texLoader = new THREE.TextureLoader();
-  const rottTex = texLoader.load('assets/rottweiler_texture.png');
-  rottTex.magFilter = THREE.NearestFilter;
-  rottTex.minFilter = THREE.NearestFilter;
-  rottweilerModel.traverse(child => {
-    if (child.isMesh) {
-      child.material = new THREE.MeshLambertMaterial({ map: rottTex });
-    }
+  const rottTex = texLoader.load('assets/rottweiler_texture.png', function(tex) {
+    tex.magFilter = THREE.NearestFilter;
+    tex.minFilter = THREE.NearestFilter;
+    rottweilerModel.traverse(child => {
+      if (child.isMesh) {
+        child.material.map = tex;
+        child.material.needsUpdate = true;
+      }
+    });
   });
+  rottweilerModel = gltf.scene;
 }, undefined, () => console.warn('Rottweiler model failed to load'));
 
 function spawnMob(x, y, z, type) {
@@ -1060,7 +1061,7 @@ function updateMobs(delta) {
     const dx = mob.position.x - mob.group.position.x;
     const dz = mob.position.z - mob.group.position.z;
     if (Math.abs(dx) > 0.01 || Math.abs(dz) > 0.01) {
-      mob.group.rotation.y = Math.atan2(dx, dz);
+      mob.group.rotation.y = Math.atan2(dx, dz) + Math.PI;
     }
 
     mob.group.position.copy(mob.position);
