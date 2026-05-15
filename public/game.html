@@ -698,6 +698,19 @@ function generateChunk(cx, cz) {
     }
   }
 
+  // Spawn rottweilers in forest biome
+  if (bc === BIOMES.forest && Math.random() < 0.3) {
+    const lx = Math.floor(Math.random() * CHUNK_SIZE);
+    const lz = Math.floor(Math.random() * CHUNK_SIZE);
+    const wx = cx * CHUNK_SIZE + lx;
+    const wz = cz * CHUNK_SIZE + lz;
+    const h = getHeightForBiome(wx, wz);
+    if (h >= WATER_LEVEL) {
+      // Defer spawn until after blockMap is populated
+      setTimeout(() => spawnMob(wx, h + 2, wz, 'rottweiler'), 100);
+    }
+  }
+
   // BUG 1 FIX: store blockId string, not `true`.
   // Water is excluded (not solid for collision).
   blockData.forEach(b => {
@@ -876,6 +889,218 @@ function updateRemotePlayer(data) {
 function removeRemotePlayer(id) {
   const rp = remotePlayers[id]; if (!rp) return;
   scene.remove(rp.group); delete remotePlayers[id];
+}
+
+// ============================================================
+// MOBS
+// ============================================================
+const mobs = [];
+const mobGltfLoader = new THREE.GLTFLoader();
+let rottweilerModel = null;
+
+// Preload the rottweiler model once
+mobGltfLoader.load('assets/rottweiler.gltf', function(gltf) {
+  rottweilerModel = gltf.scene;
+  // Apply texture
+  const texLoader = new THREE.TextureLoader();
+  const rottTex = texLoader.load('assets/rottweiler_texture.png');
+  rottTex.magFilter = THREE.NearestFilter;
+  rottTex.minFilter = THREE.NearestFilter;
+  rottweilerModel.traverse(child => {
+    if (child.isMesh) {
+      child.material = new THREE.MeshLambertMaterial({ map: rottTex });
+    }
+  });
+}, undefined, () => console.warn('Rottweiler model failed to load'));
+
+function spawnMob(x, y, z, type) {
+  const mob = {
+    type,
+    position: new THREE.Vector3(x, y, z),
+    velocity: new THREE.Vector3(0, 0, 0),
+    health: 14,        // 7 hearts = 14 hp
+    maxHealth: 14,
+    damage: 6,         // 3 hearts = 6 hp
+    state: 'wander',   // wander, hostile, dead
+    target: null,
+    wanderTimer: 0,
+    wanderDir: new THREE.Vector2(0, 0),
+    attackCooldown: 0,
+    isOnGround: false,
+    group: null,
+  };
+
+  // Clone model if loaded
+  if (rottweilerModel) {
+    mob.group = rottweilerModel.clone();
+  } else {
+    // Fallback box if model not loaded yet
+    const geo = new THREE.BoxGeometry(0.8, 0.6, 1.2);
+    const mat = new THREE.MeshLambertMaterial({ color: 0x4a3728 });
+    mob.group = new THREE.Mesh(geo, mat);
+  }
+
+  mob.group.position.copy(mob.position);
+  scene.add(mob.group);
+  mobs.push(mob);
+  return mob;
+}
+
+function removeMob(mob) {
+  scene.remove(mob.group);
+  mobs.splice(mobs.indexOf(mob), 1);
+}
+
+function hurtMob(mob, damage) {
+  if (mob.state === 'dead') return;
+  mob.health -= damage;
+  mob.state = 'hostile';
+  mob.target = player;
+
+  // Flash red
+  mob.group.traverse(child => {
+    if (child.isMesh) {
+      const orig = child.material.map;
+      child.material = new THREE.MeshLambertMaterial({ color: 0xff0000, map: orig });
+      setTimeout(() => {
+        child.material = new THREE.MeshLambertMaterial({ map: orig });
+      }, 150);
+    }
+  });
+
+  if (mob.health <= 0) {
+    mob.state = 'dead';
+    setTimeout(() => removeMob(mob), 500);
+  }
+}
+
+function updateMobs(delta) {
+  const WANDER_SPEED = 1.5;
+  const CHASE_SPEED  = 3.5;
+  const ATTACK_RANGE = 1.5;
+  const DETECT_RANGE = 10;
+
+  for (const mob of [...mobs]) {
+    if (mob.state === 'dead') continue;
+
+    // Gravity
+    mob.velocity.y -= 28 * delta;
+    const newY = mob.position.y + mob.velocity.y * delta;
+    if (isSolid(mob.position.x, newY, mob.position.z)) {
+      mob.velocity.y = 0;
+      mob.isOnGround = true;
+    } else {
+      mob.position.y = newY;
+      mob.isOnGround = false;
+    }
+
+    // Wander behavior
+    if (mob.state === 'wander') {
+      mob.wanderTimer -= delta;
+      if (mob.wanderTimer <= 0) {
+        // Pick a new random direction or stop
+        const angle = Math.random() * Math.PI * 2;
+        const moving = Math.random() > 0.3;
+        mob.wanderDir.set(
+          moving ? Math.cos(angle) : 0,
+          moving ? Math.sin(angle) : 0
+        );
+        mob.wanderTimer = 2 + Math.random() * 3;
+      }
+
+      const moveAmt = WANDER_SPEED * delta;
+      const nx = mob.position.x + mob.wanderDir.x * moveAmt;
+      const nz = mob.position.z + mob.wanderDir.y * moveAmt;
+      if (!isSolid(nx, mob.position.y, mob.position.z)) mob.position.x = nx;
+      if (!isSolid(mob.position.x, mob.position.y, nz)) mob.position.z = nz;
+
+      // Detect player
+      const distToPlayer = mob.position.distanceTo(player.position);
+      if (distToPlayer < DETECT_RANGE && mob.target === player) {
+        mob.state = 'hostile';
+      }
+    }
+
+    // Hostile behavior
+    if (mob.state === 'hostile') {
+      const distToPlayer = mob.position.distanceTo(player.position);
+
+      // Chase player
+      if (distToPlayer > ATTACK_RANGE) {
+        const dir = new THREE.Vector3()
+          .subVectors(player.position, mob.position)
+          .normalize();
+        const moveAmt = CHASE_SPEED * delta;
+        const nx = mob.position.x + dir.x * moveAmt;
+        const nz = mob.position.z + dir.z * moveAmt;
+        if (!isSolid(nx, mob.position.y, mob.position.z)) mob.position.x = nx;
+        if (!isSolid(mob.position.x, mob.position.y, nz)) mob.position.z = nz;
+
+        // Simple jump over 1-block obstacles
+        if (mob.isOnGround && isSolid(nx, mob.position.y + 1, mob.position.z)) {
+          mob.velocity.y = 6;
+        }
+      }
+
+      // Attack player
+      mob.attackCooldown -= delta;
+      if (distToPlayer <= ATTACK_RANGE && mob.attackCooldown <= 0) {
+        mob.attackCooldown = 1.5;
+        hurtPlayer(mob.damage);
+      }
+
+      // Lose interest if player gets far away
+      if (distToPlayer > 20) {
+        mob.state = 'wander';
+        mob.target = null;
+      }
+    }
+
+    // Face movement direction
+    const dx = mob.position.x - mob.group.position.x;
+    const dz = mob.position.z - mob.group.position.z;
+    if (Math.abs(dx) > 0.01 || Math.abs(dz) > 0.01) {
+      mob.group.rotation.y = Math.atan2(dx, dz);
+    }
+
+    mob.group.position.copy(mob.position);
+  }
+}
+
+// Player health system
+let playerHealth = 20; // 10 hearts
+let playerInvincible = false;
+
+function hurtPlayer(damage) {
+  if (playerInvincible) return;
+  playerHealth -= damage;
+  playerInvincible = true;
+
+  // Flash damage overlay
+  const flash = document.getElementById('damage-flash');
+  flash.style.background = 'rgba(200,0,0,0.4)';
+  setTimeout(() => flash.style.background = 'rgba(200,0,0,0)', 200);
+
+  // Update health bar
+  const pct = Math.max(0, (playerHealth / 20) * 100);
+  document.getElementById('health-fill').style.width = pct + '%';
+  document.getElementById('health-label').textContent = Math.max(0, playerHealth);
+
+  // Invincibility frames — 0.5s like Minecraft
+  setTimeout(() => playerInvincible = false, 500);
+
+  if (playerHealth <= 0) {
+    document.getElementById('death-screen').style.display = 'flex';
+  }
+}
+
+function respawn() {
+  playerHealth = 20;
+  document.getElementById('health-fill').style.width = '100%';
+  document.getElementById('health-label').textContent = '20';
+  document.getElementById('death-screen').style.display = 'none';
+  player.position.set(8, Math.max(getHeightForBiome(8, 8), WATER_LEVEL) + 3, 8);
+  velocityY = 0;
 }
 
 // ============================================================
@@ -1082,6 +1307,7 @@ async function startGame() {
   player.position.set(8, spawnY, 8);
   buildHotbar(); buildInventory();
   document.getElementById('hotbar').style.display = 'flex';
+  document.getElementById('hud-bars').style.display = 'flex';
 
   if (isMobile()) {
     document.getElementById('mobile-controls').style.display = 'block';
@@ -1281,6 +1507,7 @@ function animate(timestamp) {
 
   chunkUpdateTimer++;
   if (chunkUpdateTimer >= 30) { chunkUpdateTimer = 0; updateChunks(); }
+  updateMobs(delta);
 
   for (const rp of Object.values(remotePlayers))
     rp.group.children.forEach(c => { if (c.userData.isLabel) c.lookAt(camera.position); });
