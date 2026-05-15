@@ -415,7 +415,7 @@ scene.background = new THREE.Color(0x87ceeb);
 scene.fog = new THREE.Fog(0x87ceeb, 20, 60);
 
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-let yaw = 0, pitch = -0.4;
+let yaw = 0, pitch = 0;
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1));
@@ -485,25 +485,12 @@ function chunkKey(cx, cz)   { return `${cx},${cz}`; }
   function voxelRaycast(maxDist = 8) {
   camera.updateMatrixWorld();
 
-  const dir = new THREE.Vector3();
-  const pos = new THREE.Vector3();
+  // Always shoot from screen center — works for both first and third person
+  const raycaster = new THREE.Raycaster();
+  raycaster.setFromCamera(new THREE.Vector2(0, 0), camera);
 
-  if (isFirstPerson) {
-    // First person: ray from eye in exact camera direction
-    camera.getWorldDirection(dir);
-    pos.set(
-      player.position.x,
-      player.position.y + 1.6,
-      player.position.z
-    );
-  } else {
-    // Third person: ray from camera through screen center (crosshair)
-    // Use a raycaster aimed at the center of the screen
-    const ray = new THREE.Raycaster();
-    ray.setFromCamera(new THREE.Vector2(0, 0), camera);
-    dir.copy(ray.ray.direction);
-    pos.copy(ray.ray.origin);
-  }
+  const dir = raycaster.ray.direction;
+  const pos = raycaster.ray.origin;
 
   function intbound(s, ds) {
     if (ds === 0) return Infinity;
@@ -512,16 +499,22 @@ function chunkKey(cx, cz)   { return `${cx},${cz}`; }
     return (frac === 0 ? 1 : frac) / -ds;
   }
 
-  let x = Math.floor(pos.x), y = Math.floor(pos.y), z = Math.floor(pos.z);
+  let x = Math.floor(pos.x);
+  let y = Math.floor(pos.y);
+  let z = Math.floor(pos.z);
+
   const stepX = dir.x > 0 ? 1 : dir.x < 0 ? -1 : 0;
   const stepY = dir.y > 0 ? 1 : dir.y < 0 ? -1 : 0;
   const stepZ = dir.z > 0 ? 1 : dir.z < 0 ? -1 : 0;
+
   const tDeltaX = stepX !== 0 ? Math.abs(1 / dir.x) : Infinity;
   const tDeltaY = stepY !== 0 ? Math.abs(1 / dir.y) : Infinity;
   const tDeltaZ = stepZ !== 0 ? Math.abs(1 / dir.z) : Infinity;
+
   let tMaxX = intbound(pos.x, dir.x);
   let tMaxY = intbound(pos.y, dir.y);
   let tMaxZ = intbound(pos.z, dir.z);
+
   let lastX = x, lastY = y, lastZ = z, dist = 0;
 
   while (dist < maxDist) {
@@ -529,9 +522,13 @@ function chunkKey(cx, cz)   { return `${cx},${cz}`; }
       return { x, y, z, nx: lastX - x, ny: lastY - y, nz: lastZ - z };
     }
     lastX = x; lastY = y; lastZ = z;
-    if (tMaxX < tMaxY && tMaxX < tMaxZ) { dist = tMaxX; tMaxX += tDeltaX; x += stepX; }
-    else if (tMaxY < tMaxZ)             { dist = tMaxY; tMaxY += tDeltaY; y += stepY; }
-    else                                { dist = tMaxZ; tMaxZ += tDeltaZ; z += stepZ; }
+    if (tMaxX < tMaxY && tMaxX < tMaxZ) {
+      dist = tMaxX; tMaxX += tDeltaX; x += stepX;
+    } else if (tMaxY < tMaxZ) {
+      dist = tMaxY; tMaxY += tDeltaY; y += stepY;
+    } else {
+      dist = tMaxZ; tMaxZ += tDeltaZ; z += stepZ;
+    }
   }
   return null;
 }
@@ -1288,14 +1285,15 @@ function animate(timestamp) {
     // ── THIRD PERSON ──────────────────────────────────────────────────
     // Camera orbits BEHIND the player using a spherical approach.
     // yaw controls horizontal orbit, pitch controls vertical arc.
-    // "Behind" = player.position + reverse of look direction
+    pitch = Math.max(-0.6, Math.min(Math.PI / 3, pitch));
+
     const cosPitch = Math.cos(pitch);
     const sinPitch = Math.sin(pitch);
 
     // Ideal camera offset from player (before collision check)
     const maxDist = 5;
     const idealOffX = Math.sin(yaw) * cosPitch * maxDist;
-    const idealOffY = sinPitch * maxDist + 1.5; // +1.5 keeps cam at shoulder height at pitch=0
+    const idealOffY = sinPitch * maxDist + 1.5;
     const idealOffZ = Math.cos(yaw) * cosPitch * maxDist;
 
     // Step from player outward toward ideal and stop at first block hit
@@ -1316,7 +1314,7 @@ function animate(timestamp) {
       player.position.y + idealOffY * scale,
       player.position.z + idealOffZ * scale
     );
-
+    
     // Camera always looks directly at player's head
    camera.lookAt(
   player.position.x,
