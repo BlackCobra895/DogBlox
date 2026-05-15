@@ -991,9 +991,13 @@ function updateMobs(delta) {
     // Gravity
     mob.velocity.y -= 28 * delta;
     const newY = mob.position.y + mob.velocity.y * delta;
-    if (isSolid(mob.position.x, newY, mob.position.z)) {
+    if (mob.velocity.y < 0 && isSolid(mob.position.x, newY, mob.position.z)) {
       mob.velocity.y = 0;
       mob.isOnGround = true;
+      // Snap to top of block
+      mob.position.y = Math.floor(mob.position.y) + 1;
+    } else if (mob.velocity.y > 0 && isSolid(mob.position.x, newY + 1, mob.position.z)) {
+      mob.velocity.y = 0;
     } else {
       mob.position.y = newY;
       mob.isOnGround = false;
@@ -1016,8 +1020,31 @@ function updateMobs(delta) {
       const moveAmt = WANDER_SPEED * delta;
       const nx = mob.position.x + mob.wanderDir.x * moveAmt;
       const nz = mob.position.z + mob.wanderDir.y * moveAmt;
-      if (!isSolid(nx, mob.position.y, mob.position.z)) mob.position.x = nx;
-      if (!isSolid(mob.position.x, mob.position.y, nz)) mob.position.z = nz;
+
+      // Wall collision
+      if (!isSolid(nx, mob.position.y, mob.position.z) &&
+          !isSolid(nx, mob.position.y + 1, mob.position.z)) {
+        mob.position.x = nx;
+      } else {
+        mob.wanderDir.x *= -1; // bounce off wall
+        mob.wanderTimer = 0;
+      }
+      if (!isSolid(mob.position.x, mob.position.y, nz) &&
+          !isSolid(mob.position.x, mob.position.y + 1, nz)) {
+        mob.position.z = nz;
+      } else {
+        mob.wanderDir.y *= -1;
+        mob.wanderTimer = 0;
+      }
+
+      // Cliff detection — don't walk off edges
+      const aheadX = mob.position.x + mob.wanderDir.x * 0.6;
+      const aheadZ = mob.position.z + mob.wanderDir.y * 0.6;
+      if (!isSolid(aheadX, mob.position.y - 1, aheadZ)) {
+        // No ground ahead — pick new direction
+        mob.wanderDir.set(0, 0);
+        mob.wanderTimer = 0;
+      }
 
       // Detect player
       const distToPlayer = mob.position.distanceTo(player.position);
@@ -1038,8 +1065,10 @@ function updateMobs(delta) {
         const moveAmt = CHASE_SPEED * delta;
         const nx = mob.position.x + dir.x * moveAmt;
         const nz = mob.position.z + dir.z * moveAmt;
-        if (!isSolid(nx, mob.position.y, mob.position.z)) mob.position.x = nx;
-        if (!isSolid(mob.position.x, mob.position.y, nz)) mob.position.z = nz;
+        if (!isSolid(nx, mob.position.y, mob.position.z) &&
+            !isSolid(nx, mob.position.y + 1, mob.position.z)) mob.position.x = nx;
+        if (!isSolid(mob.position.x, mob.position.y, nz) &&
+            !isSolid(mob.position.x, mob.position.y + 1, nz)) mob.position.z = nz;
 
         // Simple jump over 1-block obstacles
         if (mob.isOnGround && isSolid(nx, mob.position.y + 1, mob.position.z)) {
