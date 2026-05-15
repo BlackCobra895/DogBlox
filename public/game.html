@@ -485,12 +485,18 @@ function chunkKey(cx, cz)   { return `${cx},${cz}`; }
   function voxelRaycast(maxDist = 8) {
   camera.updateMatrixWorld();
 
-  // Always shoot from screen center — works for both first and third person
+  // Always get direction from screen center
   const raycaster = new THREE.Raycaster();
   raycaster.setFromCamera(new THREE.Vector2(0, 0), camera);
+  const dir = raycaster.ray.direction.clone().normalize();
 
-  const dir = raycaster.ray.direction;
-  const pos = raycaster.ray.origin;
+  // But ALWAYS originate from the player's eye, not the camera
+  // This fixes third-person offset — direction is correct, origin is player
+  const pos = new THREE.Vector3(
+    player.position.x,
+    player.position.y + 1.6,
+    player.position.z
+  );
 
   function intbound(s, ds) {
     if (ds === 0) return Infinity;
@@ -532,7 +538,6 @@ function chunkKey(cx, cz)   { return `${cx},${cz}`; }
   }
   return null;
 }
-
 // BUG 9 FIX — addRaycastBlock() was defined as an empty no-op and called
 // conceptually elsewhere in comments. Removed entirely. DDA reads blockMap directly.
 
@@ -1314,7 +1319,7 @@ function animate(timestamp) {
       player.position.y + idealOffY * scale,
       player.position.z + idealOffZ * scale
     );
-    
+
     // Camera always looks directly at player's head
    camera.lookAt(
   player.position.x,
