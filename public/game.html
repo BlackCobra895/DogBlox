@@ -707,7 +707,7 @@ function generateChunk(cx, cz) {
     const h = getHeightForBiome(wx, wz);
     if (h >= WATER_LEVEL) {
       // Defer spawn until after blockMap is populated
-      setTimeout(() => spawnMob(wx, h + 2, wz, 'rottweiler'), 100);
+      setTimeout(() => spawnMob(wx, h + 1, wz, 'rottweiler'), 100);
     }
   }
 
@@ -989,35 +989,21 @@ function updateMobs(delta) {
     if (mob.state === 'dead') continue;
 
     // Gravity
-    if (!mob.isOnGround) {
-      mob.velocity.y -= 28 * delta;
-    }
-
+    mob.velocity.y -= 28 * delta;
     const newY = mob.position.y + mob.velocity.y * delta;
-    const groundY = Math.floor(mob.position.y);
 
-    if (mob.velocity.y < 0) {
-      if (isSolid(mob.position.x, groundY - 1, mob.position.z)) {
-        // Snap cleanly to top of block
-        mob.position.y = groundY;
-        mob.velocity.y = 0;
-        mob.isOnGround = true;
-      } else {
-        mob.position.y = newY;
-        mob.isOnGround = false;
-      }
-    } else if (mob.velocity.y > 0) {
-      if (isSolid(mob.position.x, groundY + 1, mob.position.z)) {
-        mob.velocity.y = 0;
-      } else {
-        mob.position.y = newY;
-      }
+    // Find ground by checking below current position
+    const feetY = Math.round(mob.position.y);
+    if (mob.velocity.y < 0 && isSolid(mob.position.x, feetY - 1, mob.position.z)) {
+      mob.velocity.y = 0;
+      mob.isOnGround = true;
+      mob.position.y = feetY; // snap to integer Y
+    } else if (mob.velocity.y > 0 && isSolid(mob.position.x, feetY + 1, mob.position.z)) {
+      mob.velocity.y = 0;
       mob.isOnGround = false;
     } else {
-      // Check if still on ground
-      if (!isSolid(mob.position.x, groundY - 1, mob.position.z)) {
-        mob.isOnGround = false;
-      }
+      mob.position.y = newY;
+      mob.isOnGround = false;
     }
 
     // Wander behavior
