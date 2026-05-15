@@ -1335,7 +1335,7 @@ function animate(timestamp) {
   }
 
   document.getElementById('debug').textContent =
-    `Pos: ${Math.round(player.position.x)}, ${Math.round(player.position.y)}, ${Math.round(player.position.z)} | Chunks: ${Object.keys(loadedChunks).length} | FPS: ${delta > 0 ? Math.round(1/delta) : '...'}`;
+    `Pos: ${Math.round(player.position.x)}, ${Math.round(player.position.y)}, ${Math.round(player.position.z)} | Chunks: ${Object.keys(loadedChunks).length} | FPS: ${delta > 0 ? Math.round(1/delta) : '...'} | yaw: ${yaw.toFixed(2)} | pitch: ${pitch.toFixed(2)}`;
 
   renderer.render(scene, camera);
 } // closes animate()
