@@ -900,18 +900,22 @@ let rottweilerModel = null;
 
 // Preload the rottweiler model once
 mobGltfLoader.load('assets/rottweiler.gltf', function(gltf) {
+  rottweilerModel = gltf.scene;
   const texLoader = new THREE.TextureLoader();
-  const rottTex = texLoader.load('assets/rottweiler_texture.png', function(tex) {
+  texLoader.load('assets/rottweiler_texture.png', function(tex) {
     tex.magFilter = THREE.NearestFilter;
     tex.minFilter = THREE.NearestFilter;
+    tex.flipY = false; // GLTF models need this
     rottweilerModel.traverse(child => {
       if (child.isMesh) {
-        child.material.map = tex;
+        child.material = new THREE.MeshLambertMaterial({
+          map: tex,
+          transparent: false,
+        });
         child.material.needsUpdate = true;
       }
     });
   });
-  rottweilerModel = gltf.scene;
 }, undefined, () => console.warn('Rottweiler model failed to load'));
 
 function spawnMob(x, y, z, type) {
