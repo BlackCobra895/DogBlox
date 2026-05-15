@@ -421,6 +421,13 @@ renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1));
 document.body.appendChild(renderer.domElement);
 
+// Debug: block highlight
+const highlightGeo = new THREE.BoxGeometry(1.01, 1.01, 1.01);
+const highlightMat = new THREE.MeshBasicMaterial({ color: 0xffffff, wireframe: true });
+const highlightMesh = new THREE.Mesh(highlightGeo, highlightMat);
+highlightMesh.visible = false;
+scene.add(highlightMesh);
+
 // ============================================================
 // NOISE + BIOMES
 // ============================================================
@@ -1170,6 +1177,15 @@ function animate(timestamp) {
   // BUG 3 FIX: compute delta in seconds, cap at 0.1 to avoid teleport on tab resume
   const delta = Math.min((timestamp - lastTime) / 1000, 0.1);
   lastTime = timestamp;
+
+  // Update block highlight
+  const hit = voxelRaycast(8);
+  if (hit) {
+    highlightMesh.position.set(hit.x, hit.y, hit.z);
+    highlightMesh.visible = true;
+  } else {
+    highlightMesh.visible = false;
+  }
 
   const MOVE_SPEED = inWater ? 3 : 6;   // units per second
   const GRAVITY    = 28;                 // units per second squared
