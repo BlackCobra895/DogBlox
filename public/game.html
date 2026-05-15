@@ -989,18 +989,35 @@ function updateMobs(delta) {
     if (mob.state === 'dead') continue;
 
     // Gravity
-    mob.velocity.y -= 28 * delta;
+    if (!mob.isOnGround) {
+      mob.velocity.y -= 28 * delta;
+    }
+
     const newY = mob.position.y + mob.velocity.y * delta;
-    if (mob.velocity.y < 0 && isSolid(mob.position.x, newY, mob.position.z)) {
-      mob.velocity.y = 0;
-      mob.isOnGround = true;
-      // Snap to top of block
-      mob.position.y = Math.floor(mob.position.y) + 1;
-    } else if (mob.velocity.y > 0 && isSolid(mob.position.x, newY + 1, mob.position.z)) {
-      mob.velocity.y = 0;
-    } else {
-      mob.position.y = newY;
+    const groundY = Math.floor(mob.position.y);
+
+    if (mob.velocity.y < 0) {
+      if (isSolid(mob.position.x, groundY - 1, mob.position.z)) {
+        // Snap cleanly to top of block
+        mob.position.y = groundY;
+        mob.velocity.y = 0;
+        mob.isOnGround = true;
+      } else {
+        mob.position.y = newY;
+        mob.isOnGround = false;
+      }
+    } else if (mob.velocity.y > 0) {
+      if (isSolid(mob.position.x, groundY + 1, mob.position.z)) {
+        mob.velocity.y = 0;
+      } else {
+        mob.position.y = newY;
+      }
       mob.isOnGround = false;
+    } else {
+      // Check if still on ground
+      if (!isSolid(mob.position.x, groundY - 1, mob.position.z)) {
+        mob.isOnGround = false;
+      }
     }
 
     // Wander behavior
@@ -1037,18 +1054,7 @@ function updateMobs(delta) {
         mob.wanderTimer = 0;
       }
 
-     // Cliff detection — only avoid if standing still would cause a fall
-      if (mob.isOnGround) {
-        const aheadX = mob.position.x + mob.wanderDir.x * 0.8;
-        const aheadZ = mob.position.z + mob.wanderDir.y * 0.8;
-        if (!isSolid(aheadX, Math.floor(mob.position.y) - 1, aheadZ) &&
-            !isSolid(aheadX, Math.floor(mob.position.y), aheadZ)) {
-          // Pick a completely new random direction away from the edge
-          const angle = Math.random() * Math.PI * 2;
-          mob.wanderDir.set(Math.cos(angle), Math.sin(angle));
-          mob.wanderTimer = 1 + Math.random() * 2;
-        }
-      }
+     // Cliff detection — REMOVED FOR NOW
 
       // Detect player
       const distToPlayer = mob.position.distanceTo(player.position);
