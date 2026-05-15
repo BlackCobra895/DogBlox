@@ -1037,13 +1037,17 @@ function updateMobs(delta) {
         mob.wanderTimer = 0;
       }
 
-      // Cliff detection — don't walk off edges
-      const aheadX = mob.position.x + mob.wanderDir.x * 0.6;
-      const aheadZ = mob.position.z + mob.wanderDir.y * 0.6;
-      if (!isSolid(aheadX, mob.position.y - 1, aheadZ)) {
-        // No ground ahead — pick new direction
-        mob.wanderDir.set(0, 0);
-        mob.wanderTimer = 0;
+     // Cliff detection — only avoid if standing still would cause a fall
+      if (mob.isOnGround) {
+        const aheadX = mob.position.x + mob.wanderDir.x * 0.8;
+        const aheadZ = mob.position.z + mob.wanderDir.y * 0.8;
+        if (!isSolid(aheadX, Math.floor(mob.position.y) - 1, aheadZ) &&
+            !isSolid(aheadX, Math.floor(mob.position.y), aheadZ)) {
+          // Pick a completely new random direction away from the edge
+          const angle = Math.random() * Math.PI * 2;
+          mob.wanderDir.set(Math.cos(angle), Math.sin(angle));
+          mob.wanderTimer = 1 + Math.random() * 2;
+        }
       }
 
       // Detect player
