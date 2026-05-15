@@ -485,13 +485,13 @@ function chunkKey(cx, cz)   { return `${cx},${cz}`; }
   function voxelRaycast(maxDist = 8) {
   camera.updateMatrixWorld();
 
-  // Always get direction from screen center
-  const raycaster = new THREE.Raycaster();
-  raycaster.setFromCamera(new THREE.Vector2(0, 0), camera);
-  const dir = raycaster.ray.direction.clone().normalize();
+  // Extract forward direction directly from camera world matrix
+  // This works correctly whether camera was set via rotation or lookAt()
+  const dir = new THREE.Vector3(0, 0, -1)
+    .applyQuaternion(camera.quaternion)
+    .normalize();
 
-  // But ALWAYS originate from the player's eye, not the camera
-  // This fixes third-person offset — direction is correct, origin is player
+  // Always cast from player's eye
   const pos = new THREE.Vector3(
     player.position.x,
     player.position.y + 1.6,
