@@ -199,16 +199,16 @@
 // BLOCK DEFINITIONS
 // ============================================================
 const BLOCK_DEFS = [
-  { id:'grass',       name:'Grass',        category:'nature', icon:'grass_top',  textures:{top:'grass_top',side:'grass_side',bottom:'dirt'}, fallbackColor:0x44aa44 },
-  { id:'dirt',        name:'Dirt',         category:'nature', icon:'dirt',       textures:{all:'dirt'},   fallbackColor:0x8B4513 },
-  { id:'sand',        name:'Sand',         category:'nature', icon:'sand',       textures:{all:'sand'},   fallbackColor:0xf4d03f },
-  { id:'snow',        name:'Snow',         category:'nature', icon:'snow',       textures:{top:'snow_top',side:'snow_side',bottom:'stone'}, fallbackColor:0xeaf0fb },
-  { id:'water',       name:'Water',        category:'nature', icon:'water',      textures:{all:'water'},  fallbackColor:0x2266cc, transparent:true },
-  { id:'stone',       name:'Stone',        category:'stone',  icon:'stone',      textures:{all:'stone'},  fallbackColor:0x888888 },
-  { id:'wood',        name:'Wood',         category:'wood',   icon:'wood',       textures:{top:'wood_top',side:'wood_side',bottom:'wood_top'}, fallbackColor:0xa0522d },
-  { id:'leaves',      name:'Leaves',       category:'wood',   icon:'leaves',     textures:{top:'leaves', side:'leaves', bottom:'leaves'}, fallbackColor:0x228B22, transparent:true, alphaTest:0.5 },
-  { id:'leaves_snow', name:'Snowy Leaves', category:'wood',   icon:'leaves_snow', textures:{top:'leaves', side:'leaves', bottom:'leaves'}, fallbackColor:0xddeeff, transparent:true, alphaTest:0.5 },
-  { id:'cactus',      name:'Cactus',       category:'wood',   icon:'cactus',     textures:{all:'cactus'}, fallbackColor:0x4a7c3f },
+  { id:'grass',       name:'Grass',        breakTime:0.6,  category:'nature', icon:'grass_top',  textures:{top:'grass_top',side:'grass_side',bottom:'dirt'}, fallbackColor:0x44aa44 },
+  { id:'dirt',        name:'Dirt',         breakTime:0.5,  category:'nature', icon:'dirt',       textures:{all:'dirt'},   fallbackColor:0x8B4513 },
+  { id:'sand',        name:'Sand',         breakTime:0.5,  category:'nature', icon:'sand',       textures:{all:'sand'},   fallbackColor:0xf4d03f },
+  { id:'snow',        name:'Snow',         breakTime:0.4,  category:'nature', icon:'snow',       textures:{top:'snow_top',side:'snow_side',bottom:'stone'}, fallbackColor:0xeaf0fb },
+  { id:'water',       name:'Water',        breakTime:99,   category:'nature', icon:'water',      textures:{all:'water'},  fallbackColor:0x2266cc, transparent:true },
+  { id:'stone',       name:'Stone',        breakTime:1.5,  category:'stone',  icon:'stone',      textures:{all:'stone'},  fallbackColor:0x888888 },
+  { id:'wood',        name:'Wood',         breakTime:1.2,  category:'wood',   icon:'wood',       textures:{top:'wood_top',side:'wood_side',bottom:'wood_top'}, fallbackColor:0xa0522d },
+  { id:'leaves',      name:'Leaves',       breakTime:0.3,  category:'wood',   icon:'leaves',     textures:{top:'leaves', side:'leaves', bottom:'leaves'}, fallbackColor:0x228B22, transparent:true, alphaTest:0.5 },
+  { id:'leaves_snow', name:'Snowy Leaves', breakTime:0.3,  category:'wood',   icon:'leaves_snow', textures:{top:'leaves', side:'leaves', bottom:'leaves'}, fallbackColor:0xddeeff, transparent:true, alphaTest:0.5 },
+  { id:'cactus',      name:'Cactus',       breakTime:0.4,  category:'wood',   icon:'cactus',     textures:{all:'cactus'}, fallbackColor:0x4a7c3f },
 ];
 
 const HOTBAR_BLOCKS = ['grass','dirt','stone','wood','sand','snow','leaves','cactus'];
@@ -808,6 +808,9 @@ function breakBlock(rx, ry, rz) {
   if (!blockMap[key]) return;
   delete blockMap[key];
 
+  let breakingBlock = null;  // { x, y, z, progress, time }
+  let isMouseDown = false;
+
   // Remove from owning chunk's blockData array
   const { cx, cz } = worldToChunk(rx, rz);
   const chunkEntry = loadedChunks[chunkKey(cx, cz)];
@@ -840,10 +843,137 @@ function placeBlock(rx, ry, rz, nx, ny, nz) {
   }
 
   socket.emit('blockChange', { x:px, y:py, z:pz, type:selectedBlock });
+  playPlaceSound();
 }
 
 function doBreak() { const hit = voxelRaycast(8); if (hit) breakBlock(hit.x, hit.y, hit.z); }
 function doPlace() { const hit = voxelRaycast(8); if (hit) placeBlock(hit.x, hit.y, hit.z, hit.nx, hit.ny, hit.nz); }
+
+// ============================================================
+// PROCEDURAL CRACK TEXTURES
+// ============================================================
+const crackTextures = [];
+
+function generateCrackTextures() {
+  for (let stage = 0; stage < 5; stage++) {
+    const canvas = document.createElement('canvas');
+    canvas.width = 16; canvas.height = 16;
+    const ctx = canvas.getContext('2d');
+
+    // Dark overlay that gets more opaque each stage
+    ctx.fillStyle = `rgba(0,0,0,${0.05 + stage * 0.06})`;
+    ctx.fillRect(0, 0, 16, 16);
+
+    // Draw cracks — more and longer each stage
+    ctx.strokeStyle = 'rgba(0,0,0,0.9)';
+    ctx.lineWidth = 0.5;
+
+    const crackCount = stage + 1;
+    // Use fixed seed per stage so cracks look consistent
+    const rand = (n) => ((Math.sin(n * 127.1 + stage * 311.7) * 43758.5453) % 1 + 1) % 1;
+
+    for (let c = 0; c < crackCount; c++) {
+      const sx = rand(c * 3) * 16;
+      const sy = rand(c * 3 + 1) * 16;
+      ctx.beginPath();
+      ctx.moveTo(sx, sy);
+
+      // Each crack has 2-4 segments
+      const segs = 2 + Math.floor(rand(c * 3 + 2) * (stage + 1));
+      let cx2 = sx, cy2 = sy;
+      for (let s = 0; s < segs; s++) {
+        cx2 += (rand(c * 10 + s) - 0.5) * (3 + stage * 1.5);
+        cy2 += (rand(c * 10 + s + 1) - 0.5) * (3 + stage * 1.5);
+        ctx.lineTo(cx2, cy2);
+
+        // Branch cracks on later stages
+        if (stage >= 2 && rand(c * 10 + s + 5) > 0.6) {
+          ctx.moveTo(cx2, cy2);
+          ctx.lineTo(
+            cx2 + (rand(c * 20 + s) - 0.5) * 3,
+            cy2 + (rand(c * 20 + s + 1) - 0.5) * 3
+          );
+          ctx.moveTo(cx2, cy2);
+        }
+      }
+      ctx.stroke();
+    }
+
+    const tex = new THREE.CanvasTexture(canvas);
+    tex.magFilter = THREE.NearestFilter;
+    tex.minFilter = THREE.NearestFilter;
+    crackTextures.push(tex);
+  }
+}
+
+generateCrackTextures();
+
+// ============================================================
+// PROCEDURAL SOUNDS
+// ============================================================
+const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+function playBreakSound(def) {
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  const filter = audioCtx.createBiquadFilter();
+
+  filter.type = 'bandpass';
+  // Stone sounds higher pitched, dirt lower
+  filter.frequency.value = def.id === 'stone' ? 800 : def.id === 'wood' ? 400 : 300;
+  filter.Q.value = 0.5;
+
+  const noise = audioCtx.createBuffer(1, audioCtx.sampleRate * 0.15, audioCtx.sampleRate);
+  const data = noise.getChannelData(0);
+  for (let i = 0; i < data.length; i++) data[i] = Math.random() * 2 - 1;
+
+  const source = audioCtx.createBufferSource();
+  source.buffer = noise;
+  source.connect(filter);
+  filter.connect(gain);
+  gain.connect(audioCtx.destination);
+
+  gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.15);
+
+  source.start();
+  source.stop(audioCtx.currentTime + 0.15);
+}
+
+function playPlaceSound() {
+  const buffer = audioCtx.createBuffer(1, audioCtx.sampleRate * 0.08, audioCtx.sampleRate);
+  const data = buffer.getChannelData(0);
+  for (let i = 0; i < data.length; i++)
+    data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / data.length, 2);
+
+  const source = audioCtx.createBufferSource();
+  const gain = audioCtx.createGain();
+  const filter = audioCtx.createBiquadFilter();
+  filter.type = 'lowpass';
+  filter.frequency.value = 600;
+
+  source.buffer = buffer;
+  source.connect(filter);
+  filter.connect(gain);
+  gain.connect(audioCtx.destination);
+  gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+
+  source.start();
+  source.stop(audioCtx.currentTime + 0.08);
+}
+
+// Crack overlay mesh — sits slightly in front of the hit face
+const crackMat = new THREE.MeshBasicMaterial({
+  transparent: true,
+  opacity: 1,
+  depthWrite: false,
+  polygonOffset: true,
+  polygonOffsetFactor: -1,
+  polygonOffsetUnits: -1,
+});
+const crackMesh = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), crackMat);
+crackMesh.visible = false;
+scene.add(crackMesh);
 
 // ============================================================
 // REMOTE PLAYERS
@@ -1238,37 +1368,27 @@ document.addEventListener('mousedown', function(event) {
   if (event.target.closest('#hotbar')) return;
   if (event.target.closest('#pausemenu')) return;
   if (!document.pointerLockElement) return;
-  const hit = voxelRaycast(8); if (!hit) return;
-  if (event.button === 2) breakBlock(hit.x, hit.y, hit.z);
-  else if (event.button === 0) placeBlock(hit.x, hit.y, hit.z, hit.nx, hit.ny, hit.nz);
-});
 
-renderer.domElement.addEventListener('click', function() {
-  if (!document.pointerLockElement && !chatOpen && !isMobile()) renderer.domElement.requestPointerLock();
-});
-
-// In your pointerlockchange handler, and after resuming:
-// Replace crosshair visibility logic — show it whenever pointer is locked
-document.addEventListener('pointerlockchange', function() {
-  const locked = !!document.pointerLockElement;
-  document.getElementById('crosshair').style.display = locked ? 'block' : 'none';
-  if (!locked && !chatOpen && !inventoryOpen && !isMobile()) {
-    document.getElementById('pausemenu').style.display = 'flex';
+  if (event.button === 2) {
+    // Right click — place instantly
+    const hit = voxelRaycast(8);
+    if (hit) placeBlock(hit.x, hit.y, hit.z, hit.nx, hit.ny, hit.nz);
+  } else if (event.button === 0) {
+    // Left click — start breaking
+    isMouseDown = true;
+    const hit = voxelRaycast(8);
+    if (hit) {
+      breakingBlock = { x: hit.x, y: hit.y, z: hit.z, nx: hit.nx, ny: hit.ny, nz: hit.nz, progress: 0 };
+    }
   }
 });
 
-document.getElementById('resumebtn').addEventListener('click', function() {
-  document.getElementById('pausemenu').style.display = 'none';
-  if (!isMobile()) renderer.domElement.requestPointerLock();
-});
-
-document.addEventListener('contextmenu', function(e) { e.preventDefault(); });
-
-document.addEventListener('mousemove', function(event) {
-  if (document.pointerLockElement !== renderer.domElement) return;
-  yaw -= event.movementX * 0.002;
-  pitch -= event.movementY * 0.002;
-  pitch = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, pitch));
+document.addEventListener('mouseup', function(event) {
+  if (event.button === 0) {
+    isMouseDown = false;
+    breakingBlock = null;
+    crackMesh.visible = false;
+  }
 });
 
 // ============================================================
@@ -1538,6 +1658,49 @@ function animate(timestamp) {
   chunkUpdateTimer++;
   if (chunkUpdateTimer >= 30) { chunkUpdateTimer = 0; updateChunks(); }
   updateMobs(delta);
+
+  // Block breaking progress
+  if (isMouseDown && breakingBlock) {
+    const hit = voxelRaycast(8);
+
+    // Cancel if looking away
+    if (!hit || hit.x !== breakingBlock.x || hit.y !== breakingBlock.y || hit.z !== breakingBlock.z) {
+      breakingBlock = null;
+      crackMesh.visible = false;
+    } else {
+      const def = getBlockDef(blockMap[`${breakingBlock.x},${breakingBlock.y},${breakingBlock.z}`] || 'grass');
+      const breakTime = def.breakTime || 1.0;
+      breakingBlock.progress += delta / breakTime;
+
+      // Show crack overlay on the hit face
+      const stage = Math.min(4, Math.floor(breakingBlock.progress * 5));
+      crackMat.map = crackTextures[stage];
+      crackMat.needsUpdate = true;
+
+      // Position crack plane on the hit face
+      const { x, y, z, nx, ny, nz } = breakingBlock;
+      const o = 0.501;
+      crackMesh.position.set(x + nx * o, y + ny * o, z + nz * o);
+
+      // Rotate plane to face correct direction
+      crackMesh.rotation.set(0, 0, 0);
+      if (ny === 1)       { crackMesh.rotation.x = -Math.PI / 2; }
+      else if (ny === -1) { crackMesh.rotation.x =  Math.PI / 2; }
+      else if (nx === 1)  { crackMesh.rotation.y =  Math.PI / 2; }
+      else if (nx === -1) { crackMesh.rotation.y = -Math.PI / 2; }
+      else if (nz === -1) { crackMesh.rotation.y =  Math.PI; }
+
+      crackMesh.visible = true;
+
+      // Break the block when progress hits 1
+      if (breakingBlock.progress >= 1) {
+        playBreakSound(def);
+        breakBlock(breakingBlock.x, breakingBlock.y, breakingBlock.z);
+        breakingBlock = null;
+        crackMesh.visible = false;
+      }
+    }
+  }
 
   for (const rp of Object.values(remotePlayers))
     rp.group.children.forEach(c => { if (c.userData.isLabel) c.lookAt(camera.position); });
